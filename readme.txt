@@ -1,0 +1,79 @@
+=== WooCommerce Billogram Integration ===
+
+Contributors:      WooBill
+Plugin Name:       WooCommerce Billogram Plugin
+Plugin URI:        www.woobill.com/
+Tags:              WooCommerce, Order, E-Commerce, Accounting
+Author URI:        www.woobill.com
+Author:            WooBill
+Requires at least: 3.8
+Tested up to:      4.0.1
+Stable tag:        1.0
+Version:           1.0
+
+== Description ==
+
+WooCommerce Billogram Integration
+Completely synchronize your WooCommerce Orders as Invoices in your Billogram invoicing service account and also synchronize Customers and Products from your Woocommerce to your Billogram invoicing service account. 
+Requires the WooCommerce plugin. Now works with Billogram API2.
+
+Data export to Billogram:
+	CUSTOMER
+	•	Name
+	•	Email
+	•	Address
+
+	PRODUCT/ARTICLE
+	•	Product name
+	•	ArticleNumber (SKU)
+	•	Price
+	•	Description
+
+	INVOICE
+	•	Articles details
+	•	Customer details
+	•	VAT
+	•	Price
+	•	Invoice fee
+	•	Shipping cost 
+
+
+Features of WooCommerce Billogram Integration:
+	1.	Automatic (and manual) sync of all Customers from WooCommerce to Billogram invoicing service dashboard.
+	2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to “Completed”.
+	3.	Automatic (and manual) sync of all products from WooCommerce to Billogram invoicing service Items. This function also updates products data are modified after initial sync. Supports variable products.
+	4.	Sync Order, Products, Customers to Billogram when Order status is changed to “Completed” at WooCommerce->Orders Management section.
+
+
+
+== Plugin Requirement ==
+
+PHP version : 5.3 or higher
+WordPress   : Wordpress 3.8 or higher
+
+== Installation ==
+
+1.	Install WooCommerce Billogram Integration either via the WordPress.org plugin directory, or by uploading the files to your server
+2.	Activate the plugin in your WordPress Admin and go to the admin panel Setting -> WooCommerce Billogram Integration.
+3.	Active the plugin with your License Key that you have received by mail and your Billogram API-USER ID.
+4.	Configure your plugin as needed.
+5.	That's it. You're ready to focus on sales, marketing and other cool stuff :-)
+
+== Screenshots ==
+
+*General settings*
+/assets/01.jpg
+
+*Order setting*
+/assets/02.jpg
+
+*Manual Sync function*
+/assets/03.jpg
+
+*Support*
+Read the FAQ or business hours mail support except weekends and holidays.
+/assets/04.jpg
+
+== Frequently Asked Questions ==
+
+http://woobill.com/category/faq/
