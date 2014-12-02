@@ -21,28 +21,22 @@ Requires the WooCommerce plugin. Now works with Billogram API2.
 
 = Data export to Billogram: =
 
-CUSTOMER:
-
-*	Name
-*	Email
-*	Address
-
-PRODUCT/ARTICLE:
-
-*	Product name
-*	ArticleNumber (SKU)
-*	Price
-*	Description
-
-
-INVOICE:
-
-*	Articles details
-*	Customer details
-*	VAT
-*	Price
-*	Invoice fee
-*	Shipping cost 
+*	CUSTOMER:
+	*	Name
+	*	Email
+	*	Address
+*	PRODUCT/ARTICLE:
+	*	Product name
+	*	ArticleNumber (SKU)
+	*	Price
+	*	Description
+*	INVOICE:
+	*	Articles details
+	*	Customer details
+	*	VAT
+	*	Price
+	*	Invoice fee
+	*	Shipping cost 
 
 Features of WooCommerce Billogram Integration:
 
@@ -66,21 +60,17 @@ WordPress   : Wordpress 3.8 or higher
 
 == Screenshots ==
 
-*Welcome Screen*
-screenshot-5.jpg
+1.	*Welcome Screen*
 
-*General settings*
-screenshot-1.jpg
+2.	*General settings*
 
-*Order setting*
-screenshot-2.jpg
+3	*Order setting*
 
-*Manual Sync function*
-screenshot-3.jpg
+4.	*Manual Sync function*
 
-*Support*
+6.	*Support*
+
 Read the FAQ or business hours mail support except weekends and holidays.
-screenshot-4.jpg
 
 == Frequently Asked Questions ==
 
