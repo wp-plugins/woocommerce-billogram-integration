@@ -104,7 +104,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
             $message = 'Kontakta ' . $_POST['name'] . ' på ' . $_POST['company'] . ' antingen på ' .$_POST['telephone'] .
                 ' eller ' . $_POST['email'] . ' gällande: \n' . $_POST['subject'];
-            $sent = wp_mail( 'kircher.tomas@gmail.com', 'Billogram Support', $message);
+            $sent = wp_mail( 'support@woobill.com', 'Billogram Support', $message);
             echo $sent;
             //die(); // this is required to return a proper result
         }

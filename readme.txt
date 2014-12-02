@@ -1,9 +1,8 @@
 === WooCommerce Billogram Integration ===
-
 Contributors:      WooBill
 Plugin Name:       WooCommerce Billogram Plugin
 Plugin URI:        www.woobill.com/
-Tags:              WooCommerce, Order, E-Commerce, Accounting
+Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invoice, invoicing, Billogram, WooCommerce, order sync, customer sync, product sync, sync, Customers, Integration, woocommerce billogram integration, woocommerce integration, billogram integration
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
@@ -11,38 +10,42 @@ Tested up to:      4.0.1
 Stable tag:        1.0
 Version:           1.0
 
+Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
+Billogram invoices can be automatically created and sent.
+Requires the WooCommerce plugin. Now works with Billogram API2.
+
 == Description ==
 
 WooCommerce Billogram Integration
-Completely synchronize your WooCommerce Orders as Invoices in your Billogram invoicing service account and also synchronize Customers and Products from your Woocommerce to your Billogram invoicing service account. 
+Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
+Billogram invoices can be automatically created and sent.
 Requires the WooCommerce plugin. Now works with Billogram API2.
 
 Data export to Billogram:
-	CUSTOMER
-	•	Name
-	•	Email
-	•	Address
+CUSTOMER
+*   Name
+*   Email
+*   Address
 
-	PRODUCT/ARTICLE
-	•	Product name
-	•	ArticleNumber (SKU)
-	•	Price
-	•	Description
+PRODUCT/ARTICLE
+*   Product name
+*   ArticleNumber (SKU)
+*   Price
+*   Description
 
-	INVOICE
-	•	Articles details
-	•	Customer details
-	•	VAT
-	•	Price
-	•	Invoice fee
-	•	Shipping cost 
-
+INVOICE
+*   Articles details
+*   Customer details
+*   VAT
+*   Price
+*   Invoice fee
+*   Shipping cost 
 
 Features of WooCommerce Billogram Integration:
-	1.	Automatic (and manual) sync of all Customers from WooCommerce to Billogram invoicing service dashboard.
-	2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to “Completed”.
-	3.	Automatic (and manual) sync of all products from WooCommerce to Billogram invoicing service Items. This function also updates products data are modified after initial sync. Supports variable products.
-	4.	Sync Order, Products, Customers to Billogram when Order status is changed to “Completed” at WooCommerce->Orders Management section.
+1.	Automatic (and manual) sync of all Customers from WooCommerce to Billogram invoicing service dashboard.
+2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to “Completed”.
+3.	Automatic (and manual) sync of all products from WooCommerce to Billogram invoicing service Items. This function also updates products data are modified after initial sync. Supports variable products.
+4.	Sync Order, Products, Customers to Billogram when Order status is changed to “Completed” at WooCommerce->Orders Management section.
 
 
 
