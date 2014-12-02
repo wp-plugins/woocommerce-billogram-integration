@@ -2,7 +2,7 @@
 Contributors:      WooBill
 Plugin Name:       WooCommerce Billogram Plugin
 Plugin URI:        www.woobill.com/
-Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invoice, invoicing, Billogram, WooCommerce, order sync, customer sync, product sync, sync, Customers, Integration, woocommerce billogram integration, woocommerce integration, billogram integration
+Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invoice, invoicing, Billogram, WooCommerce, order sync, customer sync, product sync, sync, Customers, Integration, woocommerce billogram integration, woocommerce integration, billogram integration, woocommercebillogram, wocommerce bilogram, woocomerce bilogram, wocomerce bilogram
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
