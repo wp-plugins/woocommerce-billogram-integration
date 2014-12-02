@@ -47,9 +47,9 @@ INVOICE:
 Features of WooCommerce Billogram Integration:
 
 1.	Automatic (and manual) sync of all Customers from WooCommerce to Billogram invoicing service dashboard.
-2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to “Completed”.
+2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to \“Completed\”.
 3.	Automatic (and manual) sync of all products from WooCommerce to Billogram invoicing service Items. This function also updates products data are modified after initial sync. Supports variable products.
-4.	Sync Order, Products, Customers to Billogram when Order status is changed to “Completed” at WooCommerce->Orders Management section.
+4.	Sync Order, Products, Customers to Billogram when Order status is changed to \“Completed\” at WooCommerce->Orders Management section.
 
 == Plugin Requirement ==
 
