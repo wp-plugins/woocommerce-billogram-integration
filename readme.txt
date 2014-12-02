@@ -11,8 +11,6 @@ Stable tag:        1.0
 Version:           1.0
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
-Billogram invoices can be automatically created and sent.
-Requires the WooCommerce plugin. Now works with Billogram API2.
 
 == Description ==
 
@@ -21,33 +19,37 @@ Completely synchronize your WooCommerce Orders, Customers and Products to your B
 Billogram invoices can be automatically created and sent.
 Requires the WooCommerce plugin. Now works with Billogram API2.
 
-Data export to Billogram:
-CUSTOMER
-*   Name
-*   Email
-*   Address
+= Data export to Billogram: =
 
-PRODUCT/ARTICLE
-*   Product name
-*   ArticleNumber (SKU)
-*   Price
-*   Description
+CUSTOMER:
 
-INVOICE
-*   Articles details
-*   Customer details
-*   VAT
-*   Price
-*   Invoice fee
-*   Shipping cost 
+*	Name
+*	Email
+*	Address
+
+PRODUCT/ARTICLE:
+
+*	Product name
+*	ArticleNumber (SKU)
+*	Price
+*	Description
+
+
+INVOICE:
+
+*	Articles details
+*	Customer details
+*	VAT
+*	Price
+*	Invoice fee
+*	Shipping cost 
 
 Features of WooCommerce Billogram Integration:
+
 1.	Automatic (and manual) sync of all Customers from WooCommerce to Billogram invoicing service dashboard.
 2.	Automatic (and manual) sync of all Orders from WooCommerce to Billogram invoicing service dashboard. Sync initiated when order status is changed to “Completed”.
 3.	Automatic (and manual) sync of all products from WooCommerce to Billogram invoicing service Items. This function also updates products data are modified after initial sync. Supports variable products.
 4.	Sync Order, Products, Customers to Billogram when Order status is changed to “Completed” at WooCommerce->Orders Management section.
-
-
 
 == Plugin Requirement ==
 
@@ -64,18 +66,21 @@ WordPress   : Wordpress 3.8 or higher
 
 == Screenshots ==
 
+*Welcome Screen*
+screenshot-5.jpg
+
 *General settings*
-/assets/01.jpg
+screenshot-1.jpg
 
 *Order setting*
-/assets/02.jpg
+screenshot-2.jpg
 
 *Manual Sync function*
-/assets/03.jpg
+screenshot-3.jpg
 
 *Support*
 Read the FAQ or business hours mail support except weekends and holidays.
-/assets/04.jpg
+screenshot-4.jpg
 
 == Frequently Asked Questions ==
 
