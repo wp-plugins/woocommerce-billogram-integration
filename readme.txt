@@ -60,8 +60,6 @@ WordPress   : Wordpress 3.8 or higher
 
 == Screenshots ==
 
-5.	*Welcome Screen*
-
 1.	*General settings*
 
 2.	*Order setting*
@@ -69,6 +67,8 @@ WordPress   : Wordpress 3.8 or higher
 3.	*Manual Sync function*
 
 4.	*Support*
+
+5.	*Welcome Screen*
 
 Read the FAQ or business hours mail support except weekends and holidays.
 
