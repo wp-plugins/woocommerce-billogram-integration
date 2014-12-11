@@ -238,8 +238,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 							};
 	
 							jQuery.post(ajaxurl, data);
-	
-							});
 						}
 					}).pointer('open');
 				});
