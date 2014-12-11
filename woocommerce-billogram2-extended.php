@@ -193,17 +193,20 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
 		//Section for wordpress pointers
 		
-		$plugin = '1.1';
-		if(get_option('billogram-version') != $plugin){
-			update_option('billogram-version', $plugin);
-			
+		function billogram_wp_pointer_hide_callback(){
+			update_option('billogram-tour', false);
+		}
+		add_action( 'wp_ajax_wp_pointer_hide', 'billogram_wp_pointer_hide_callback' );
+		
+		$billogram_tour = get_option('billogram-tour');
+		
+		if(isset($billogram_tour) && $billogram_tour){
 			// Register the pointer styles and scripts
 			add_action( 'admin_enqueue_scripts', 'enqueue_scripts' );
 			
 			// Add pointer javascript
 			add_action( 'admin_print_footer_scripts', 'add_pointer_scripts' );
 		}
-		
 		
 		// enqueue javascripts and styles
 		function enqueue_scripts()
@@ -220,7 +223,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		
 			?>
 			
-			<script type="text/javascript">
+            <script type="text/javascript">
 				jQuery(document).ready( function($) {
 					$("#toplevel_page_woocommerce_billogram_options").pointer({
 						content: '<?php echo $content; ?>',
@@ -230,6 +233,13 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						},
 						close: function() {
 							// what to do after the object is closed
+							var data = {
+								action: 'wp_pointer_hide'
+							};
+	
+							jQuery.post(ajaxurl, data);
+	
+							});
 						}
 					}).pointer('open');
 				});
@@ -993,6 +1003,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         UNIQUE (product_sku)
                 );";
                 dbDelta( $sql );
+				
+				add_option('billogram-tour', true);
+				
                 return true;
             }
 
