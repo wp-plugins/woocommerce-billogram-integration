@@ -1018,6 +1018,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
                 dbDelta( $sql );
+				
+				add_option('billogram-tour', true);				
                 return true;
             }
 
