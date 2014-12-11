@@ -1017,9 +1017,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 $sql = "DROP TABLE ".$table_name.";";
 
                 require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-                dbDelta( $sql );
-				
-				update_option('billogram-tour', true);				
+                dbDelta( $sql );				
                 return true;
             }
 
