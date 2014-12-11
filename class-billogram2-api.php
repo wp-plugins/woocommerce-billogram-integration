@@ -1,5 +1,5 @@
 <?php
-error_reporting(1);
+error_reporting(0);
 /* Include the Billogram API library */
 use Billogram\Api as BillogramAPI;
 use Billogram\Api\Exceptions\ObjectNotFoundError;

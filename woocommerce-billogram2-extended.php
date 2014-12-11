@@ -197,6 +197,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		}
 		add_action( 'wp_ajax_wp_pointer_hide', 'billogram_wp_pointer_hide_callback' );
 		
+		
 		$billogram_tour = get_option('billogram-tour');
 		
 		if(isset($billogram_tour) && $billogram_tour){
