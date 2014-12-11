@@ -191,22 +191,17 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		//License key invalid warning message ends.
 		
 		
-		
-		function billogram_wp_pointer_hide_callback(){
-			update_option('billogram-tour', false);
-		}
-		add_action( 'wp_ajax_wp_pointer_hide', 'billogram_wp_pointer_hide_callback' );
-		
-		
-		$billogram_tour = get_option('billogram-tour');
-		
-		if(isset($billogram_tour) && $billogram_tour){
+		$plugin = get_plugin_data(__FILE__);
+		if(get_option('billogram-version') != $plugin['Version']){
+			update_option('billogram-version', $plugin['Version']);
+			
 			// Register the pointer styles and scripts
 			add_action( 'admin_enqueue_scripts', 'enqueue_scripts' );
 			
 			// Add pointer javascript
 			add_action( 'admin_print_footer_scripts', 'add_pointer_scripts' );
 		}
+
 		
 		// enqueue javascripts and styles
 		function enqueue_scripts()
@@ -233,10 +228,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						},
 						close: function() {
 							// what to do after the object is closed
-							var data = {
-								action: 'wp_pointer_hide'
-							};
-							jQuery.post(ajaxurl, data);
 						}
 					}).pointer('open');
 				});
@@ -999,9 +990,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         UNIQUE (product_sku)
                 );";
                 dbDelta( $sql );
-				
-				update_option('billogram-tour', true);
-                
                 return true;
             }
 
