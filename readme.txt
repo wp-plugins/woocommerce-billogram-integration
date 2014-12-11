@@ -7,8 +7,8 @@ Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
 Tested up to:      4.0.1
-Stable tag:        1.0
-Version:           1.0
+Stable tag:        1.1
+Version:           1.1
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -47,8 +47,8 @@ Features of WooCommerce Billogram Integration:
 
 == Plugin Requirement ==
 
-PHP version : 5.3 or higher
-WordPress   : Wordpress 3.8 or higher
+*	PHP version : 5.3 or higher
+*	WordPress   : Wordpress 3.8 or higher
 
 == Installation ==
 
@@ -75,3 +75,14 @@ Read the FAQ or business hours mail support except weekends and holidays.
 == Frequently Asked Questions ==
 
 http://woobill.com/category/faq/
+
+== Changelog ==
+
+= 1.1 =
+* Bug fixes
+* Form validation
+* Additional invoicing option
+* Connection testing
+
+= 1.0 =
+* Initial Release

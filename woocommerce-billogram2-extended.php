@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.0
+ * Version: 1.1
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -99,15 +99,152 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         }
 
         add_action( 'wp_ajax_send_support_mail', 'billogram_send_support_mail_callback' );
+		
 
         function billogram_send_support_mail_callback() {
 
-            $message = 'Kontakta ' . $_POST['name'] . ' på ' . $_POST['company'] . ' antingen på ' .$_POST['telephone'] .
-                ' eller ' . $_POST['email'] . ' gällande: \n' . $_POST['subject'];
-            $sent = wp_mail( 'support@woobill.com', 'Billogram Support', $message);
-            echo $sent;
+            //$message = 'Kontakta ' . $_POST['name'] . ' <br>på ' . $_POST['company'] . ' <br>antingen på ' .$_POST['telephone'] .' <br>eller ' . $_POST['email'] . ' <br>gällande: <br>' . $_POST['subject'];
+			$message = '<html><body><table rules="all" style="border-color: #91B9F6; width:70%; font-family:Calibri, Arial, sans-serif;" cellpadding="10">';
+			if(isset($_POST['supportForm']) && $_POST['supportForm'] ==  "support"){
+				$message .= '<tr><td align="right">Type: </td><td align="left" colspan="1"><strong>Support</strong></td></tr>';
+			}else{
+				$message .= '<tr><td align="right">Type: </td><td align="left" colspan="1"><strong>Installationssupport</strong></td></tr>';
+			}
+			$message .= '<tr><td align="right">Företag: </td><td align="left">'.$_POST['company'].'</td></tr>';
+			$message .= '<tr><td align="right">Namn: </td><td align="left">'.$_POST['name'].'</td></tr>';
+			$message .= '<tr><td align="right">Telefon: </td><td align="left">'.$_POST['telephone'].'</td></tr>';
+			$message .= '<tr><td align="right">Email: </td><td align="left">'.$_POST['email'].'</td></tr>';
+			$message .= '<tr><td align="right">Ärende: </td><td align="left">'.$_POST['subject'].'</td></tr>';
+			
+			if(isset($_POST['supportForm']) && $_POST['supportForm'] ==  "support"){
+				$options = get_option('woocommerce_billogram_general_settings');
+				$order_options = get_option('woocommerce_billogram_order_settings');
+				$message .= '<tr><td align="right" colspan="1"><strong>Allmänna inställningar</strong></td></tr>';
+				$message .= '<tr><td align="right">License Nyckel: </td><td align="left">'.$options['license-key'].'</td></tr>';
+				$message .= '<tr><td align="right">Billogram API-användar ID: </td><td align="left">'.$options['api-key'].'</td></tr>';
+				$message .= '<tr><td align="right">Billogram API-kod: </td><td align="left">'.$options['authorization_code'].'</td></tr>';
+				$message .= '<tr><td align="right">Billogram läge: </td><td align="left">'.$options['billogram-mode'].'</td></tr>';
+				$message .= '<tr><td align="right">Aktivera ORDER synkning: </td><td align="left">'.$options['activate-orders'].'</td></tr>';
+				$message .= '<tr><td align="right">ORDER synkning method: </td><td align="left">'.$options['activate-invoices'].'</td></tr>';
+				$message .= '<tr><td align="right">Aktivera PRODUKT synkning: </td><td align="left">'.$options['activate-prices'].'</td></tr>';
+				$message .= '<tr><td align="right" colspan="1"><strong>Orderinställningar</strong></td></tr>';
+				$message .= '<tr><td align="right">Administrationsavgift: </td><td align="left">'.$order_options['admin-fee'].'</td></tr>';
+			}
+			
+			$message .= '</table></html></body>';
+	
+			
+			$headers = "MIME-Version: 1.0\r\n";
+			$headers .= "Content-type: text/html; charset=utf-8 \r\n";
+			//$headers .= "From:".get_option('admin_email')."\r\n";
+			
+            echo wp_mail( 'support@woobill.com', 'Billogram Support', $message , $headers) ? "success" : "error";
             //die(); // this is required to return a proper result
         }
+		
+		
+		//Test the connection
+		
+		function billogram_test_connection_callback() {
+			include_once("class-billogram2-api.php");
+			$fnox = new WC_Billogram_Extended();
+			$apiInterface = new WCB_API();
+			if( $fnox->is_license_key_valid() == "Invalid" ){
+				echo "License Key is Invalid!";
+				die(); // this is required to return a proper result
+			}else{
+				$data = $apiInterface->fetch_settings();
+				if( $data['status'] == "OK" ){
+					echo "Hello ".$data['data']['name'].", your integration works fine!";
+					die(); // this is required to return a proper result
+				}else{
+					echo "Your Billogram API-användar ID and Billogram API-kod does not match!";
+					die(); // this is required to return a proper result
+				}
+				//echo $fnox->is_api_key_valid()? $fnox->is_api_key_valid() : false;
+			}
+			echo "Something went wrong, please try again later!";
+			die(); // this is required to return a proper result
+        }
+		
+		//Connection testing ends
+
+        add_action( 'wp_ajax_test_connection', 'billogram_test_connection_callback' );
+		
+		
+		//License key invalid warning message.
+		
+		function license_key_invalid() {
+			$options = get_option('woocommerce_billogram_general_settings');
+			$fnox = new WC_Billogram_Extended();
+			$key_status = $fnox->is_license_key_valid();
+			if(!isset($options['license-key']) || $options['license-key'] == '' || $key_status!='Active'){
+			?>
+                <div class="error">
+                    <p>WooCommerce Billogram Integration: License Key Invalid! <button type="button button-primary" class="button button-primary" title="" style="margin:5px" onclick="window.open('http://whmcs.onlineforce.net/cart.php?a=add&pid=54&billingcycle=annually','_blank');">Hämta license-Nyckel</button></p>
+                </div>
+			<?php
+			}
+		}
+		
+		add_action( 'admin_notices', 'license_key_invalid' );
+		//License key invalid warning message ends.
+		
+		
+		
+		function billogram_wp_pointer_hide_callback(){
+			update_option('billogram-tour', false);
+		}
+		add_action( 'wp_ajax_wp_pointer_hide', 'billogram_wp_pointer_hide_callback' );
+		
+		$billogram_tour = get_option('billogram-tour');
+		
+		if(isset($billogram_tour) && $billogram_tour){
+			// Register the pointer styles and scripts
+			add_action( 'admin_enqueue_scripts', 'enqueue_scripts' );
+			
+			// Add pointer javascript
+			add_action( 'admin_print_footer_scripts', 'add_pointer_scripts' );
+		}
+		
+		// enqueue javascripts and styles
+		function enqueue_scripts()
+		{
+			wp_enqueue_style( 'wp-pointer' );
+			wp_enqueue_script( 'wp-pointer' );	
+		}
+		
+		// Add the pointer javascript
+		function add_pointer_scripts()
+		{
+			$content = '<h3>WooCommerce Billogram Integration</h3>';
+			$content .= '<p>You’ve just installed WooCommerce Billogram Integration by WooBill. Please use the plugin options page to setup your integration.</p>';
+		
+			?>
+			
+            <script type="text/javascript">
+				jQuery(document).ready( function($) {
+					$("#toplevel_page_woocommerce_billogram_options").pointer({
+						content: '<?php echo $content; ?>',
+						position: {
+							edge: 'left',
+							align: 'center'
+						},
+						close: function() {
+							// what to do after the object is closed
+							var data = {
+								action: 'wp_pointer_hide'
+							};
+							jQuery.post(ajaxurl, data);
+						}
+					}).pointer('open');
+				});
+			</script>
+		   
+		<?php
+		}
+		
+		//Section for wordpress pointers ends.
 
         /**
          * Localisation
@@ -165,7 +302,17 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
              * @return void
              */
             function add_admin_menus() {
-                add_options_page( 'WooCommerce Billogram Integration', 'WooCommerce Billogram Integration', 'manage_options', $this->plugin_options_key, array( &$this, 'woocommerce_billogram_options_page' ) );
+				add_menu_page( 'WooCommerce Billogram Integration', 'Billogram', 'manage_options', $this->plugin_options_key, array( &$this, 'woocommerce_billogram_options_page' ) );
+				/*$current_tab = isset( $_GET['tab'] ) ? $_GET['tab'] : $this->start_action_key;
+				$this->plugin_settings_tabs[$this->start_action_key] = 'Välkommen!';
+				$this->plugin_settings_tabs[$this->general_settings_key] = 'Allmänna inställningar';
+				$this->plugin_settings_tabs[$this->order_settings_key] = 'Orderinställningar';
+				$this->plugin_settings_tabs[$this->manual_action_key] = 'Manuella funktioner';
+				$this->plugin_settings_tabs[$this->support_key] = 'Support';
+				foreach ( $this->plugin_settings_tabs as $tab_key => $tab_caption ) {
+                    $active = $current_tab == $tab_key ? 'nav-tab-active' : '';
+					add_submenu_page( $this->plugin_options_key, $tab_caption, $tab_caption, 'manage_options', $this->plugin_options_key.'&tab=' . $tab_key, array( &$this, 'woocommerce_billogram_options_page' ) );
+                }*/
             }
 
             /**
@@ -213,7 +360,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     $val = esc_attr( $options[$args['key']] );
                 }
                 ?>
-                <input type="text" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" value="<?php echo $val; ?>" />
+                <input <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> type="text" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" value="<?php echo $val; ?>" />
                 <span><i><?php echo $args['desc']; ?></i></span>
             <?php
             }
@@ -240,11 +387,11 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 }
 
                 ?>
-                <select name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]">
+                <select <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]">
                     <option <?php echo $str; ?>>Live</option>
                     <option <?php echo $str2; ?>>Sandbox</option>
                 </select>
-                <span><i><?php echo $args['desc']; ?></i></span>
+                <span id="sandbox-mode"><i><?php echo $args['desc']; ?></i></span>
             <?php
             }
             
@@ -260,9 +407,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 $str = '';
                 $str2 = '';
                 if(isset($options[$args['key']])){
-                    if($options[$args['key']] == 'Skapa faktura'){
+                    if($options[$args['key']] == 'Skapa faktura och skicka som epost'){
                         $str = 'selected';
                     }
+					elseif($options[$args['key']] == 'Skapa faktura och skicka som brev'){
+						$str3 = 'selected';
+					}
                     else
                     {
                         $str2 = 'selected';
@@ -270,8 +420,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 }
 
                 ?>
-                <select name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]">
-                    <option <?php echo $str; ?>>Skapa faktura</option>
+                <select <?php echo isset($args['id'])? 'id="'.$args['id'].'"':''; ?> name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]">
+                	<option <?php echo $str; ?>>Skapa faktura och skicka som epost</option>
+                    <option <?php echo $str3; ?>>Skapa faktura och skicka som brev</option>
                     <option <?php echo $str2; ?>>Spara utkast</option>
                 </select>
                 <span><i><?php echo $args['desc']; ?></i></span>
@@ -296,7 +447,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 }
 
                 ?>
-                <input type="checkbox" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" <?php echo $str; ?> />
+                <input <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> type="checkbox" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" <?php echo $str; ?> />
                 <span><i><?php echo $args['desc']; ?></i></span>
             <?php
             }
@@ -354,13 +505,13 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 register_setting( $this->general_settings_key, $this->general_settings_key );
                 add_settings_section( 'section_general', 'Allmänna inställningar', array( &$this, 'section_general_desc' ), $this->general_settings_key );
-                add_settings_field( 'woocommerce-billogram-license-key', 'License Nyckel', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'license-key', 'desc' => 'Här anges License-nyckeln du har erhållit från oss via mail.') );
+                add_settings_field( 'woocommerce-billogram-license-key', 'License Nyckel', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'id' => 'license-key', 'tab_key' => $this->general_settings_key, 'key' => 'license-key', 'desc' => 'Här anges License-nyckeln du har erhållit från oss via mail.') );
                 add_settings_field( 'woocommerce-billogram-api-key', 'Billogram API-användar ID', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'api-key', 'desc' => 'Här anges din API-användar ID från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
                 add_settings_field( 'woocommerce-billogram-authorization-code', 'Billogram API-kod', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'authorization_code', 'desc' => 'Här anges din API kod från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
-                add_settings_field( 'woocommerce-billogram-billogram-mode', 'Billogram läge', array( &$this, 'field_mode_dropdown'), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'billogram-mode', 'desc' => ''));
-                add_settings_field( 'woocommerce-billogram-activate-invoices', 'Faktura synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => ''));
-                add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivare PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );    
-				add_settings_field( 'woocommerce-billogram-activate-orders', 'Aktivera ORDER synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-orders', 'desc' => '') );            
+                add_settings_field( 'woocommerce-billogram-billogram-mode', 'Billogram läge', array( &$this, 'field_mode_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'billogram-mode', 'tab_key' => $this->general_settings_key, 'key' => 'billogram-mode', 'desc' => 'Välj LIVE. SANDBOX läge används endast av utvecklare'));
+				add_settings_field( 'woocommerce-billogram-activate-orders', 'Aktivera ORDER synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'id' => 'activate-order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-orders', 'desc' => 'Skal vara vald för att ordrar skal synkas till Billogram') );
+                add_settings_field( 'woocommerce-billogram-activate-invoices', 'ORDER synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => 'Välj här vad som skal hända i Billogram när en order i woocommerce synkas ditt'));
+                add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivera PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );              
             }
 
             /**
@@ -408,7 +559,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
              * @return void
              */
             function register_woocommerce_billogram_start_action() {
-
                 $this->plugin_settings_tabs[$this->start_action_key] = 'Välkommen!';
                 register_setting( $this->start_action_key, $this->start_action_key );
             }
@@ -427,7 +577,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 register_setting( $this->order_settings_key, $this->order_settings_key );
                 add_settings_section( 'section_order', 'Orderinställningar', array( &$this, 'section_order_desc' ), $this->order_settings_key );
-                add_settings_field( 'woocommerce-billogram-admin-fee', 'Administrationsavgift', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'admin-fee', 'desc' => 'Här anges fakturaavgiften/administrationsavgiften') );
+                add_settings_field( 'woocommerce-billogram-admin-fee', 'Administrationsavgift', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'admin-fee', 'desc' => 'Här anges fakturaavgiften/administrationsavgiften för Billogram') );
                 /*add_settings_field( 'woocommerce-billogram-payment-options', 'Betalningsvillkor för order', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'payment-options', 'desc' => 'Här anges Billogram-koden för betalningsalternativ för ordern. Koder finns under INSTÄLLNINGAR->BOKFÖRING->BETALNINGSALTERNATIV i Billogram.') );*/
             }
 
@@ -492,11 +642,15 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	                    padding: 10px 0;
                         height: 50px;
                     }
-                    li.full img{
+                    li.full img, img.test_load{
                         float: left;
                         margin: -5px 0 0 5px;
                         display: none;
                     }
+					span.test_warning{
+						float: left;
+						margin:25px 0px 0px 10px;
+					}
                     li.col-two {
                         float: left;
                         width: 380px;
@@ -523,10 +677,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	                .mailsupport > h2 {
 		                font-size: 20px;
 		            }
-	                form#support table.form-table tbody tr td {
+	                form#support table.form-table tbody tr td, form#installationSupport table.form-table tbody tr td {
 		                padding: 4px 0 !important;
 		            }
-		            form#support input, form#support textarea {
+		            form#support input, form#support textarea, form#installationSupport input, form#support textarea {
 			                border: 1px solid #b7b7b7;
 			                border-radius: 3px;
 			                -moz-border-radius: 3px;
@@ -534,10 +688,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			                box-shadow: none;
 			                width: 210px;
 			        }
-			        form#support textarea {
+			        form#support textarea, form#installationSupport textarea {
 				        height: 60px;
 			        }
-			        form#support button {
+			        form#support button, form#installationSupport button {
 				        float: left;
 				        margin: 0 !important;
 				        min-width: 100px;
@@ -566,7 +720,73 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					    text-align: center;
 					    width: 200px;
 					}
+					.testConnection{
+						float:left;
+					}
+					
+					p.submit{
+						float: left;
+						width: auto;
+						padding: 0px;
+					}
+					/*li.wp-first-item{
+						display:none;
+					}*/
+					span#sandbox-mode{
+						color:#F00
+					}
+					span.error{
+						color:#F00
+					}
                 </style>
+                <script type="text/javascript">
+					jQuery(document).ready(function() {
+						var element = jQuery('#order-sync').parent().parent();
+						if(jQuery('#activate-order-sync').is(':checked')){
+							element.show();
+						}else{
+							element.hide();
+						}
+						jQuery('#activate-order-sync').change(function() {
+							if(this.checked) {
+								element.show(300);							
+							}else{
+								element.hide(300);
+							}
+						});
+						
+						//script for sandbox text
+						if(jQuery('#billogram-mode').val() == "Live"){
+							jQuery('#sandbox-mode').hide();
+						}
+						jQuery('#billogram-mode').change(function(){
+							if(jQuery('#billogram-mode').val() == "Live"){
+								jQuery('#sandbox-mode').hide(100);
+							}else{
+								jQuery('#sandbox-mode').show(100);
+							}
+						});
+						
+						jQuery("#license-key").keyup(function(){
+							var str = jQuery("#license-key").val();
+							var patt = /wbm-[a-zA-Z0-9][^\W]+/gi;
+							var licenseMatch = patt.exec(str);
+							if(licenseMatch){
+								licenseMatch = licenseMatch.toString();
+								if(licenseMatch.length == 24){
+									jQuery("#license-key").next().removeClass("error");
+									jQuery("#license-key").next().children("i").html("Här anges License-nyckeln du har erhållit från oss via mail.");
+								}else{
+									jQuery("#license-key").next().children("i").html("Ogiltigt format");
+									jQuery("#license-key").next().addClass("error");
+								}
+							}else{
+								jQuery("#license-key").next().children("i").html("Ogiltigt format");
+								jQuery("#license-key").next().addClass("error");
+							}
+						});
+					});
+				</script>
                 <?php
                 if($tab == $this->support_key){ ?>
                     <div class="wrap">
@@ -581,11 +801,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 else if($tab == $this->general_settings_key){ ?>
                     <div class="wrap">
                         <?php $this->plugin_options_tabs(); ?>
-                        <form method="post" action="options.php">
+                        <form method="post" id="billogramGeneralSettings" action="options.php">
                             <?php wp_nonce_field( 'update-options' ); ?>
                             <?php settings_fields( $tab ); ?>
                             <?php do_settings_sections( $tab ); ?>
-                            <?php submit_button(); ?>
+                            <?php submit_button('Spara ändringar'); ?>
+                            <button style="margin: 20px 0px 0px 10px;" type="button" name="testConnection" class="button button-primary testConnection" onclick="test_connection()" />Testa anslutning</button>
+                            <span class="test_warning">OBS! Spara ändringar innan du testar anslutning</span>
+                            <img style="margin: 10px 0px 0px 10px;" src="<?php echo plugins_url( 'img/ajax-loader.gif', __FILE__ );?>" class="test_load" >
                         </form>
                     </div>
                 <?php }
@@ -596,7 +819,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             <li class="full">
                                 <button type="button" class="button" title="Manuell Synkning" style="margin:5px" onclick="fetch_contacts()">Manuell synkning kontakter</button>
                                 <img src="<?php echo plugins_url( 'img/ajax-loader.gif', __FILE__ );?>" class="customer_load" >
-                                <p>Hämtar alla kunder från er woocommerce. Detta görs för att undvika dubbletter.</p>
+                                <p>Hämtar alla kunder från er Billogram. Detta görs för att undvika dubbletter.</p>
                             </li>
                             <li class="full">
                                 <button type="button" class="button" title="Manuell Synkning Orders" style="margin:5px" onclick="sync_orders()">Manuell synkning ordrar</button>
@@ -627,6 +850,53 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             <li class="col-onethird">
                             	<div class="mailsupport">
                             		<h2>Installationssupport</h2>
+                            	    <form method="post" id="installationSupport">
+                            	        <input type="hidden" value="send_support_mail" name="action">
+                            	        <table class="form-table">
+								
+                            	            <tbody>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <input type="text" value="" placeholder="Företag" name="company">
+                            	                </td>
+                            	            </tr>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <input type="text" value="" placeholder="Namn" name="name">
+                            	                </td>
+                            	            </tr>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <input type="text" value="" placeholder="Telefon" name="telephone">
+                            	                </td>
+                            	            </tr>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <input type="text" value="" placeholder="Email" name="email">
+                            	                </td>
+                            	            </tr>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <textarea placeholder="Ärende" name="subject"></textarea>
+                            	                </td>
+                            	            </tr>
+                            	            <tr valign="top">
+                            	                <td>
+                            	                    <button type="button" class="button button-primary" title="send_support_mail" style="margin:5px" onclick="send_support_mail('installationSupport')">Skicka</button>
+                            	                </td>
+                            	            </tr>
+                            	            </tbody>
+                            	        </table>
+                            	        <!-- p class="submit">
+                            	           <button type="button" class="button button-primary" title="send_support_mail" style="margin:5px" onclick="send_support_mail()">Skicka</button> 
+                            	        </p -->
+                            	    </form>
+                            	</div>
+                            </li>
+                        <?php } else{ ?>
+                        	<li class="col-onethird">
+                            	<div class="mailsupport">
+                            		<h2>Support</h2>
                             	    <form method="post" id="support">
                             	        <input type="hidden" value="send_support_mail" name="action">
                             	        <table class="form-table">
@@ -659,7 +929,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             	            </tr>
                             	            <tr valign="top">
                             	                <td>
-                            	                    <button type="button" class="button button-primary" title="send_support_mail" style="margin:5px" onclick="send_support_mail()">Skicka</button>
+                                                	<input type="hidden" name="supportForm" value="support" />
+                            	                    <button type="button" class="button button-primary" title="send_support_mail" style="margin:5px" onclick="send_support_mail('support')">Skicka</button>
                             	                </td>
                             	            </tr>
                             	            </tbody>
@@ -727,6 +998,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         UNIQUE (product_sku)
                 );";
                 dbDelta( $sql );
+				
+				add_option('billogram-tour', true);
                 
                 return true;
             }
@@ -752,7 +1025,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
              * BILLOGRAM FUNCTIONS
              ***********************************************************************************************************/
 
-            /**
+			
+			/**
              * Fetches contacts from Billogram and writes them local db
              *
              * @access public
@@ -879,7 +1153,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     /*if(!isset($options['activate-invoices'])){
                         return;
                     }*/
-                    if($options['activate-invoices'] == 'Skapa faktura'){
+                    if($options['activate-invoices'] == 'Skapa faktura och skicka som epost' || $options['activate-invoices'] == 'Skapa faktura och skicka som brev'){
                         //Create invoice
                         $invoiceResponse = $apiInterface->create_order_invoice_request($orderResponse);
                     }
@@ -930,7 +1204,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     if(!isset($options['activate-invoices'])){
                         continue;
                     }
-                    if($options['activate-invoices'] == 'Skapa faktura'){
+                    if($options['activate-invoices'] == 'Skapa faktura och skicka som epost'){
                         //Create invoice
                         $invoiceResponse = $apiInterface->create_order_invoice_request($orderResponse);
                         

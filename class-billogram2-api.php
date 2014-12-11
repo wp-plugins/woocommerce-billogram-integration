@@ -1,5 +1,5 @@
 <?php
-error_reporting(0);
+error_reporting(1);
 /* Include the Billogram API library */
 use Billogram\Api as BillogramAPI;
 use Billogram\Api\Exceptions\ObjectNotFoundError;
@@ -96,7 +96,7 @@ class WCB_API{
         if(!isset($this->license_key)){
             return false;
         }
-        
+		
         $apiUsername = $this->api_key;
         $apiPassword = $this->authorization_code;
         $identifier = 'Bilogram API Customer';
@@ -130,7 +130,7 @@ class WCB_API{
         // Must match what is specified in the MD5 Hash Verification field
         // of the licensing product that will be used with this check.
         $licensing_secret_key = 'ak4762';
-        //$licensing_secret_key = 'abc123';
+        //$licensing_secret_key = 'itservice';
         // The number of days to wait between performing remote license checks
         $localkeydays = 15;
         // The number of days to allow failover for after local key expiry
@@ -494,13 +494,14 @@ class WCB_API{
         $apiBaseUrl = $this->api_url;
         $api = new BillogramAPI($apiUsername, $apiPassword, $identifier, $apiBaseUrl);
         
+		logthis("XML:".print_r($xml, true));
         $arrayData = $api->$url->create($xml);
         /*if($options['activate-orders']=='Skicka faktura')
         {
             $arrayData->send('Email');
         }*/
         //$arrayData->send('Email');
-        logthis(print_r($arrayData, true));
+        //logthis("Billogram:".print_r($arrayData, true));
 
         //Send error to plugapi
         if (array_key_exists("Error",$arrayData)){
@@ -531,11 +532,20 @@ class WCB_API{
         $identifier = 'Bilogram API Update Customer';
         $apiBaseUrl = $this->api_url;
         $api = new BillogramAPI($apiUsername, $apiPassword, $identifier, $apiBaseUrl);
-
+		$options = get_option('woocommerce_billogram_general_settings');
+		
         if($url[0]=="billogram")
         {
-            $xml->send('Email');
-            $array_data = 'true';
+			if($options['activate-invoices'] == 'Skapa faktura och skicka som epost'){
+				logthis('------------Skapa faktura och skicka som epost-------------');
+				$xml->send('Email');
+				$array_data = 'true';
+			}
+			elseif($options['activate-invoices'] == 'Skapa faktura och skicka som brev'){
+				logthis('------------Skapa faktura och skicka som brev-------------');
+				$xml->send('Letter');
+				$array_data = 'true';
+			}
         }
         else if($url[0]=="items")
         {
@@ -575,6 +585,46 @@ class WCB_API{
         }
 
         return $array_data;
+    }
+	
+	/**
+     * Makes GET request
+     *
+     * @access private
+     * @param mixed $url
+     * @return array
+     */
+    private function fetch_settings_request($url){
+
+        if(!$this->localkeydata){
+            return false;
+        }
+
+        $identifier = 'Bilogram API Settings';
+        $settingsURL = $this->api_url.'/'.$url;
+		
+		logthis($this->api_key);
+		logthis($this->authorization_code);
+		$auth = base64_encode($this->api_key . ":" . $this->authorization_code);
+		logthis($auth);
+        
+		$headers = array(
+            'Authorization: Basic ' . $auth,
+            'Content-Type: application/json',
+        );
+        $ch = curl_init();
+        curl_setopt($ch,CURLOPT_HTTPHEADER,$headers);
+        curl_setopt ($ch, CURLOPT_URL, $settingsURL);
+        curl_setopt ($ch, CURLOPT_TIMEOUT,60);
+        curl_setopt ($ch, CURLOPT_VERBOSE,0);
+        curl_setopt ($ch, CURLOPT_POST, 0);
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+        $data = curl_exec($ch);
+        $settings = json_decode($data, true);
+		return $settings;
     }
 
     /**
@@ -616,6 +666,17 @@ class WCB_API{
     public function update_product_price_request($xml, $sku){
         logthis("UPDATE PRICE REQUEST");
         return $this->make_put_request($this->build_url("prices/A/" . $sku . "/0"), $xml);
+    }
+	
+	
+	/**
+     * Fetches BillogramAPI settings containing Company name to validate the Billogram API account.
+     * @access public
+     * @return sting (settings company name)
+     */
+    public function fetch_settings(){
+        logthis("FETCHING SETTINGS");
+        return $this->fetch_settings_request("settings");
     }
 
 
