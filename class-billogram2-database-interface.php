@@ -42,7 +42,7 @@ class WCB_Database_Interface{
      */
     public function set_product_sku($productId,$sku){
         global $wpdb;
-        $wpdb->query("INSERT INTO wcb_products VALUES (NULL, ".mysql_real_escape_string($productId).", '".$sku."')");
+        $wpdb->query("INSERT INTO wcb_products VALUES (NULL, ".$productId.", '".$sku."')");
         return true;
 
     }
@@ -70,7 +70,7 @@ class WCB_Database_Interface{
      */
     public function get_product_sku($productId){
         global $wpdb;
-        return $wpdb->get_results("SELECT * from wcb_products WHERE product_id = '". mysql_real_escape_string($productId) ."'");
+        return $wpdb->get_results("SELECT * from wcb_products WHERE product_id = '". $productId ."'");
     
     }
 
@@ -83,7 +83,7 @@ class WCB_Database_Interface{
      */
     public function create_unsynced_order($orderId){
         global $wpdb;
-        $wpdb->query("INSERT INTO wcb_orders VALUES (NULL, ".mysql_real_escape_string($orderId).", 0)");
+        $wpdb->query("INSERT INTO wcb_orders VALUES (NULL, ".$orderId.", 0)");
         return true;
     }
 
@@ -96,7 +96,7 @@ class WCB_Database_Interface{
      */
     public function create_customer($email){
         global $wpdb;
-        $wpdb->query("INSERT INTO wcb_customers VALUES (NULL, 0,'".mysql_real_escape_string($email)."')");
+        $wpdb->query("INSERT INTO wcb_customers VALUES (NULL, 0,'".$email."')");
         return $wpdb->insert_id;
     }
 
@@ -114,7 +114,7 @@ class WCB_Database_Interface{
         }
         if($customer->contact->email && $customer->customer_no){
 
-                $wpdb->query("INSERT INTO wcb_customers VALUES (NULL, '".mysql_real_escape_string($customer->customer_no)."', '".mysql_real_escape_string($customer->contact->email)."')");
+                $wpdb->query("INSERT INTO wcb_customers VALUES (NULL, '".$customer->customer_no."', '".$customer->contact->email."')");
                 return $wpdb->insert_id;
             }
         
@@ -129,7 +129,7 @@ class WCB_Database_Interface{
      */
     public function get_customer_by_email($email){
         global $wpdb;
-        return $wpdb->get_results("SELECT * from wcb_customers WHERE email = '". mysql_real_escape_string($email) ."'");
+        return $wpdb->get_results("SELECT * from wcb_customers WHERE email = '". $email ."'");
     }
 
     /**
