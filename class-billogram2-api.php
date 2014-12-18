@@ -494,7 +494,7 @@ class WCB_API{
         $apiBaseUrl = $this->api_url;
         $api = new BillogramAPI($apiUsername, $apiPassword, $identifier, $apiBaseUrl);
         
-		logthis("XML:".print_r($xml, true));
+		//logthis("XML:".print_r($xml, true));
         $arrayData = $api->$url->create($xml);
         /*if($options['activate-orders']=='Skicka faktura')
         {

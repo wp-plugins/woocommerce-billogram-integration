@@ -1045,7 +1045,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 $databaseInterface = new WCB_Database_Interface();
 
                 foreach($customers as $customer){
-                        $databaseInterface->create_existing_customer($customer);
+						$exist = $databaseInterface->get_customer_by_email($customer->contact->email);
+						if(empty($exist)){
+                        	$databaseInterface->create_existing_customer($customer);
+						}
                 }
                 return true;
             }
@@ -1120,6 +1123,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     //send Order XML
                     $orderResponse = $apiInterface->create_order_request($orderXml);
 
+					logthis("OrderResponse: ".$orderResponse);
                     //Error handling
                     if(array_key_exists('Error', $orderResponse)){
                         logthis(print_r($orderResponse, true));
@@ -1410,11 +1414,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                  //create Contact XML
                 $contactDoc = new WCB_Contact_XML_Document();
                 $contactXml = $contactDoc->create($order);
+				//logthis("billing emal:".$order->billing_email);
+				//logthis("customer:".print_r($customer, true));
                 if(empty($customer)){
                     
                     $customerId = $databaseInterface->create_customer($order->billing_email);
                     //send Contact XML
                     $contactResponseCode = $apiInterface->create_customer_request($contactXml);
+					//logthis("contactResponseCode:".$contactResponseCode);
                     $customerNumber = $contactResponseCode->customer_no;
                     $databaseInterface->update_customer($customerId, $customerNumber);
 
