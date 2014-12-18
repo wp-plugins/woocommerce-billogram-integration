@@ -6,7 +6,7 @@ Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invo
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
-Tested up to:      4.1
+Tested up to:      4.0.1
 Stable tag:        1.1
 Version:           1.1
 
