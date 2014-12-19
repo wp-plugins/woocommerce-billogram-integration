@@ -37,7 +37,9 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
         $order['customer']['address']['zipcode'] = $arr->billing_postcode;
         $order['customer']['email'] = $arr->billing_email;
         //$order['currency'] = $arr->get_order_currency();
-        $order['invoice_fee'] = $order_options['admin-fee'];
+		if($order_options['admin-fee'] != ''){
+			$order['invoice_fee'] = $order_options['admin-fee'];
+		}
         
         $invoicerows = array();
         //loop all items
