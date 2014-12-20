@@ -580,7 +580,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 register_setting( $this->order_settings_key, $this->order_settings_key );
                 add_settings_section( 'section_order', 'Orderinställningar', array( &$this, 'section_order_desc' ), $this->order_settings_key );
-                add_settings_field( 'woocommerce-billogram-admin-fee', 'Administrationsavgift', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'admin-fee', 'desc' => '<br>Här anges fakturaavgiften/administrationsavgiften för Billogram <br>Lämna fältet tomt om avgift redan är konfigurerat i Billogram kontot under: Mitt konto  --> Inställningar --> Fakturainställningar --> Faktura avgift') );
+                add_settings_field( 'woocommerce-billogram-admin-fee', 'Administrationsavgift', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'id' => 'admin-fee', 'tab_key' => $this->order_settings_key, 'key' => 'admin-fee', 'desc' => '<br>Här anges fakturaavgiften/administrationsavgiften för Billogram <br>Lämna fältet tomt om avgift redan är konfigurerat i Billogram kontot under: Mitt konto  --> Inställningar --> Fakturainställningar --> Faktura avgift') );
                 /*add_settings_field( 'woocommerce-billogram-payment-options', 'Betalningsvillkor för order', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'payment-options', 'desc' => 'Här anges Billogram-koden för betalningsalternativ för ordern. Koder finns under INSTÄLLNINGAR->BOKFÖRING->BETALNINGSALTERNATIV i Billogram.') );*/
             }
 
@@ -788,6 +788,27 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 								jQuery("#license-key").next().addClass("error");
 							}
 						});
+						
+						jQuery("#admin-fee").keyup(function(){
+							if(!jQuery.isNumeric(jQuery(this).val())){
+								jQuery(this).next().children("i").html("Ogiltigt format");
+								jQuery(this).next().addClass("error");
+							}else{
+								jQuery(this).next().removeClass("error");
+								jQuery(this).next().children("i").html("<br>Här anges fakturaavgiften/administrationsavgiften för Billogram <br>Lämna fältet tomt om avgift redan är konfigurerat i Billogram kontot under: Mitt konto  --&gt; Inställningar --&gt; Fakturainställningar --&gt; Faktura avgift");
+							}
+						});
+						
+						jQuery("#billogramOrderinstallningar").submit(function(e){
+							if(!jQuery.isNumeric(jQuery("#admin-fee").val())){
+								e.preventDefault();
+								jQuery("#admin-fee").next().children("i").html("Ogiltigt format");
+								jQuery("#admin-fee").next().addClass("error");
+							}else{
+								jQuery("#admin-fee").next().removeClass("error");
+								jQuery("#admin-fee").next().children("i").html("<br>Här anges fakturaavgiften/administrationsavgiften för Billogram <br>Lämna fältet tomt om avgift redan är konfigurerat i Billogram kontot under: Mitt konto  --&gt; Inställningar --&gt; Fakturainställningar --&gt; Faktura avgift");
+							}
+						});
 					});
 				</script>
                 <?php
@@ -951,7 +972,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 else{ ?>
                     <div class="wrap">
                         <?php $this->plugin_options_tabs(); ?>
-                        <form method="post" action="options.php">
+                        <form method="post" id="billogramOrderinstallningar" action="options.php">
                             <?php wp_nonce_field( 'update-options' ); ?>
                             <?php settings_fields( $tab ); ?>
                             <?php do_settings_sections( $tab ); ?>
