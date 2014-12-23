@@ -93,7 +93,7 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
         $order['callbacks']['url'] = $siteurl;
         $order['info']['order_no'] = $arr->id;
         $order['info']['order_date'] = substr($arr->order_date, 0, 10);
-        $order['info']['delivery_date'] = substr($arr->order_date, 0, 10);
+        $order['info']['delivery_date'] = NULL;
         
         return $order;
     }

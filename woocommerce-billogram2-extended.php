@@ -790,7 +790,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						});
 						
 						jQuery("#admin-fee").keyup(function(){
-							if(!jQuery.isNumeric(jQuery(this).val())){
+							if(!jQuery.isNumeric(jQuery(this).val()) && jQuery(this).val() != ''){
 								jQuery(this).next().children("i").html("Ogiltigt format");
 								jQuery(this).next().addClass("error");
 							}else{
@@ -800,7 +800,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						});
 						
 						jQuery("#billogramOrderinstallningar").submit(function(e){
-							if(!jQuery.isNumeric(jQuery("#admin-fee").val())){
+							if(!jQuery.isNumeric(jQuery("#admin-fee").val()) && jQuery("#admin-fee").val() != ''){
 								e.preventDefault();
 								jQuery("#admin-fee").next().children("i").html("Ogiltigt format");
 								jQuery("#admin-fee").next().addClass("error");
