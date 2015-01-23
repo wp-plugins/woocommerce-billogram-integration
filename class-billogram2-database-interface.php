@@ -16,7 +16,30 @@ class WCB_Database_Interface{
      */
     public function read_unsynced_orders(){
         global $wpdb;
-        return $wpdb->get_results("SELECT * from wcb_orders WHERE synced = 0");
+		return $wpdb->get_results("SELECT * from wcb_orders WHERE synced = 0");
+    }
+	
+	 /**
+     * Creates a n XML representation of a n Order
+     *
+     * @access public
+     * @internal param mixed $arr
+     * @return bool
+     */
+    public function is_synced_order($id = NULL){
+        global $wpdb;
+		if($id){
+			$order = $wpdb->get_results("SELECT * from wcb_orders WHERE synced = 1 AND order_id = ".$id, ARRAY_A);
+			logthis("is_synced_order");
+			if(!empty($order)){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		else{
+        	
+		}
     }
 
     /**

@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.1
+ * Version: 1.2
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -33,7 +33,7 @@ if ( ! function_exists( 'logthis' ) ) {
                 $fileobject = fopen(dirname(__FILE__).'/logfile.log', 'a');
             }
 
-            if(is_array($msg || is_object($msg))){
+            if(is_array($msg) || is_object($msg)){
                 fwrite($fileobject,print_r($msg, true));
             }
             else{
@@ -51,6 +51,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     load_plugin_textdomain( 'wc_billogram_extended', false, dirname( plugin_basename( __FILE__ ) ) . '/' );
     if ( ! class_exists( 'WCBillogramExtended' ) ) {
 
+
+		//Add billogram payment class
+		include_once("class-billogram2-payment.php");
+
         // in javascript, object properties are accessed as ajax_object.ajax_url, ajax_object.we_value
         function billogram_enqueue(){
             wp_enqueue_script('jquery');
@@ -59,6 +63,16 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         }
 
         add_action( 'admin_enqueue_scripts', 'billogram_enqueue' );
+		
+		
+		//Add action to handle billogram invoice payment order sync
+		add_action('woocommerce_checkout_order_processed', 'billogram_sent_invoice', 10, 1);
+		function billogram_sent_invoice($order_id){
+			$fnox = new WC_Billogram_Extended();
+			$fnox->send_contact_to_billogram($order_id);
+		}
+		
+		
         add_action( 'wp_ajax_initial_sync_products', 'billogram_initial_sync_products_callback' );
 
         function billogram_initial_sync_products_callback() {
@@ -514,6 +528,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 add_settings_field( 'woocommerce-billogram-billogram-mode', 'Billogram läge', array( &$this, 'field_mode_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'billogram-mode', 'tab_key' => $this->general_settings_key, 'key' => 'billogram-mode', 'desc' => 'Välj LIVE. SANDBOX läge används endast av utvecklare'));
 				add_settings_field( 'woocommerce-billogram-activate-orders', 'Aktivera ORDER synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'id' => 'activate-order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-orders', 'desc' => 'Skal vara vald för att ordrar skal synkas till Billogram') );
                 add_settings_field( 'woocommerce-billogram-activate-invoices', 'ORDER synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => 'Välj här vad som skal hända i Billogram när en order i woocommerce synkas ditt'));
+				add_settings_field( 'woocommerce-billogram-activate-allsync', 'Aktivera alla beställningar synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-allsync', 'desc' => 'Synka alla ordrar från WooCommerce till Billogram oavsett om kund väljer annat betalningsalternativ (t.ex; Paypa, Dibs, Stripe, Payson etc.) <br><i style="margin-left:25px; color: #F00;">Om du är osäker vad du ska välja här rekommenderar vi att du inte markerar detta alternativ.</i>') );
                 add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivera PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );              
             }
 
@@ -1089,24 +1104,43 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     include_once("class-billogram2-database-interface.php");
                     include_once("class-billogram2-api.php");
                     //fetch Order
+					$database = new WCB_Database_Interface();
                     $order = new WC_Order($orderId);
+					logthis("Payment method: ".$order->payment_method);
+					if($order->payment_method != 'billogram-invoice'){
+						if($options['activate-allsync'] != "on"){
+							$unsyncedOrders = $database->read_unsynced_orders();
+							foreach($unsyncedOrders as $unsyncedOrder){
+								if($unsyncedOrder->order_id == $orderId){
+									return false;
+								}
+								else{
+									$database->create_unsynced_order($orderId);
+									return false;
+								}
+							}
+							$database->create_unsynced_order($orderId);
+							return false;
+						}
+					}
                     logthis('send_contact_to_billogram');
                     $customerNumber = $this->get_or_create_customer($order);
                     logthis("CREATE UNSYNCED ORDER");
-                    $database = new WCB_Database_Interface();
-                    //Save
-                    $database->create_unsynced_order($orderId);
-                    if(!isset($options['activate-orders'])){
-                        return;
-                    }
-
-                    if($options['activate-orders'] == 'on'){
-                        $orderNumber = $this->send_order_to_billogram($orderId, $customerNumber);
-                        if($orderNumber == 0){
-                            $database->set_as_synced($orderId);
-                            return;
-                        }
-                    }
+					if(!$database->is_synced_order($orderId)){
+						//Save
+						$database->create_unsynced_order($orderId);
+						if(!isset($options['activate-orders'])){
+							return true;
+						}
+	
+						if($options['activate-orders'] == 'on'){
+							$orderNumber = $this->send_order_to_billogram($orderId, $customerNumber);
+							if($orderNumber == 0){
+								$database->set_as_synced($orderId);
+								return true;
+							}
+						}
+					}
                     
                 }
             }
@@ -1133,7 +1167,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     //fetch Order
                     $order = new WC_Order($orderId);
                     logthis("ORDER");
-                    logthis(print_r($order, true));
+                    logthis($order);
                     //Init API
                     $apiInterface = new WCB_API();
 
@@ -1175,13 +1209,13 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             $database = new WCB_Database_Interface();
                             //Save
                             $database->create_unsynced_order($orderId);
-                            return 0;
+                            return 1;
                         }
                     }
                     /*if(!isset($options['activate-invoices'])){
                         return;
                     }*/
-                    if($options['activate-invoices'] == 'Skapa faktura och skicka som epost' || $options['activate-invoices'] == 'Skapa faktura och skicka som brev'){
+                    if(($options['activate-invoices'] == 'Skapa faktura och skicka som epost' || $options['activate-invoices'] == 'Skapa faktura och skicka som brev') && $order->payment_method == 'billogram-invoice'){
                         //Create invoice
                         $invoiceResponse = $apiInterface->create_order_invoice_request($orderResponse);
                     }
@@ -1212,6 +1246,11 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     $orderId = $order->order_id;
 
                     $order = new WC_Order($orderId);
+					if($order->payment_method != 'billogram-invoice'){
+						if($options['activate-allsync'] != "on"){
+							return true;
+						}
+					}
                     
                     $customerNumber = $this->get_or_create_customer($order);
                        
@@ -1223,16 +1262,15 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     $orderResponse = $apiInterface->create_order_request($orderXml);
                     
                     if($orderResponse->id){
-                        $databaseInterface->set_as_synced($orderId);
-                        
+                        $databaseInterface->set_as_synced($orderId);   
                     }
                     else{
-                        continue;
+						return false;
                     }
                     if(!isset($options['activate-invoices'])){
                         continue;
                     }
-                    if($options['activate-invoices'] == 'Skapa faktura och skicka som epost'){
+                    if(($options['activate-invoices'] == 'Skapa faktura och skicka som epost' || $options['activate-invoices'] == 'Skapa faktura och skicka som brev') && $order->payment_method == 'billogram-invoice'){
                         //Create invoice
                         $invoiceResponse = $apiInterface->create_order_invoice_request($orderResponse);
                         

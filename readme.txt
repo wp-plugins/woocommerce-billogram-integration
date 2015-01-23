@@ -8,7 +8,7 @@ Author:            WooBill
 Requires at least: 3.8
 Tested up to:      4.1
 Stable tag:        1.1
-Version:           1.1
+Version:           1.2
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -77,6 +77,10 @@ Read the FAQ or business hours mail support except weekends and holidays.
 http://woobill.com/category/faq/
 
 == Changelog ==
+
+= 1.2 =
+* Billogram Invoice as Checkout Payment option.
+* Sync all orders / Billogram orders option.
 
 = 1.1 =
 * Bug fixes
