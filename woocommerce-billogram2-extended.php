@@ -140,6 +140,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$message .= '<tr><td align="right">Billogram läge: </td><td align="left">'.$options['billogram-mode'].'</td></tr>';
 				$message .= '<tr><td align="right">Aktivera ORDER synkning: </td><td align="left">'.$options['activate-orders'].'</td></tr>';
 				$message .= '<tr><td align="right">ORDER synkning method: </td><td align="left">'.$options['activate-invoices'].'</td></tr>';
+				$message .= '<tr><td align="right">Aktivera alla beställningar synkning: </td><td align="left">'.$options['activate-allsync'].'</td></tr>';
 				$message .= '<tr><td align="right">Aktivera PRODUKT synkning: </td><td align="left">'.$options['activate-prices'].'</td></tr>';
 				$message .= '<tr><td align="right" colspan="1"><strong>Orderinställningar</strong></td></tr>';
 				$message .= '<tr><td align="right">Administrationsavgift: </td><td align="left">'.$order_options['admin-fee'].'</td></tr>';
