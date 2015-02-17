@@ -136,7 +136,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$message .= '<tr><td align="right" colspan="1"><strong>Allmänna inställningar</strong></td></tr>';
 				$message .= '<tr><td align="right">License Nyckel: </td><td align="left">'.$options['license-key'].'</td></tr>';
 				$message .= '<tr><td align="right">Billogram API-användar ID: </td><td align="left">'.$options['api-key'].'</td></tr>';
-				$message .= '<tr><td align="right">Billogram API-kod: </td><td align="left">'.$options['authorization_code'].'</td></tr>';
+				$message .= '<tr><td align="right">Billogram Lösenord: </td><td align="left">'.$options['authorization_code'].'</td></tr>';
 				$message .= '<tr><td align="right">Billogram läge: </td><td align="left">'.$options['billogram-mode'].'</td></tr>';
 				$message .= '<tr><td align="right">Aktivera ORDER synkning: </td><td align="left">'.$options['activate-orders'].'</td></tr>';
 				$message .= '<tr><td align="right">ORDER synkning method: </td><td align="left">'.$options['activate-invoices'].'</td></tr>';
@@ -173,7 +173,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					echo "Hello ".$data['data']['name'].", your integration works fine!";
 					die(); // this is required to return a proper result
 				}else{
-					echo "Your Billogram API-användar ID and Billogram API-kod does not match!";
+					echo "Your Billogram API-användar ID and Billogram Lösenord does not match!";
 					die(); // this is required to return a proper result
 				}
 				//echo $fnox->is_api_key_valid()? $fnox->is_api_key_valid() : false;
@@ -525,7 +525,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 add_settings_section( 'section_general', 'Allmänna inställningar', array( &$this, 'section_general_desc' ), $this->general_settings_key );
                 add_settings_field( 'woocommerce-billogram-license-key', 'License Nyckel', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'id' => 'license-key', 'tab_key' => $this->general_settings_key, 'key' => 'license-key', 'desc' => 'Här anges License-nyckeln du har erhållit från oss via mail.') );
                 add_settings_field( 'woocommerce-billogram-api-key', 'Billogram API-användar ID', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'api-key', 'desc' => 'Här anges din API-användar ID från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
-                add_settings_field( 'woocommerce-billogram-authorization-code', 'Billogram API-kod', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'authorization_code', 'desc' => 'Här anges din API kod från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
+                add_settings_field( 'woocommerce-billogram-authorization-code', 'Billogram Lösenord', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'authorization_code', 'desc' => 'Här anges din API kod från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
                 add_settings_field( 'woocommerce-billogram-billogram-mode', 'Billogram läge', array( &$this, 'field_mode_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'billogram-mode', 'tab_key' => $this->general_settings_key, 'key' => 'billogram-mode', 'desc' => 'Välj LIVE. SANDBOX läge används endast av utvecklare'));
 				add_settings_field( 'woocommerce-billogram-activate-orders', 'Aktivera ORDER synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'id' => 'activate-order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-orders', 'desc' => 'Skal vara vald för att ordrar skal synkas till Billogram') );
                 add_settings_field( 'woocommerce-billogram-activate-invoices', 'ORDER synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => 'Välj här vad som skal hända i Billogram när en order i woocommerce synkas ditt'));
