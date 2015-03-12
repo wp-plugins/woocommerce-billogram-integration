@@ -374,15 +374,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		 *
 		 *Functon for plugin update
 		*/
-		global $billogram_version;
-		$billogram_version = '1.3';
 		function billogram_update(){
-			global $wpdb;
-			$plugin_data = get_plugin_data( __FILE__ );
-			$version = $plugin_data['Version'];
-			if($version != $billogram_version){
+			$billogram_version = get_option('billogram_version');
+			if(isset($billogram_version) && $billogram_version && $billogram_version != '1.3'){
 				billogram_install();
 			}
+			update_option('billogram_version', '1.3');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
