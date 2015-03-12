@@ -22,10 +22,15 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 
         //$root = 'Order';
         $signKey = uniqid();
-        $siteurl = get_site_url();
+        $siteurl = admin_url('admin-ajax.php').'?action=billogram_callback';
+		//$siteurl = plugins_url( '/woocommerce-billogram-integration/billogram-callback.php' );
+		logthis("siteurl: ". $siteurl);
        
         $order['invoice_date'] = substr($arr->order_date, 0, 10);
-        $order['due_date'] = date("Y-m-d", strtotime($arr->order_date ." +15 day") );
+        //$order['due_date'] = date("Y-m-d", strtotime($arr->order_date ." +15 day") );
+		if($order_options['due-days'] != ''){
+			$order['due_days'] = $order_options['due-days'];
+		}
         $order['currency'] = 'SEK';
         $order['customer']['name'] = $arr->billing_first_name . " " . $arr->billing_last_name;
         $order['customer']['customer_no'] = $customerNumber;
@@ -95,6 +100,8 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
         $order['info']['order_date'] = substr($arr->order_date, 0, 10);
         $order['info']['delivery_date'] = NULL;
         
+		logthis($order);
+		
         return $order;
     }
 }
