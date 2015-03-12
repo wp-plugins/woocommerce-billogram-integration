@@ -382,7 +382,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		function billogram_update(){
 			$billogram_version = get_option('billogram_version');
 			if($billogram_version != '1.3'){
-				billogram_install();
+				$wpdb->query ("ALTER TABLE ".$table_name." 
+						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
+						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
 			}
 			update_option('billogram_version', '1.3');
 		}
