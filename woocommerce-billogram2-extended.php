@@ -310,14 +310,13 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		function billogram_install(){
 			global $wpdb;
 			$table_name = "wcb_orders";
-			$sql = "CREATE TABLE ".$table_name."( 
+			$sql[] = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
-					order_id mediumint(9) NOT NULL,
-					invoice_no mediumint(20) NOT NULL,
-					ocr_number bigint(9) NOT NULL,
-					synced tinyint(1) DEFAULT FALSE NOT NULL,
-					UNIQUE KEY id (id)
-			);";
+					order_id mediumint(9) NOT NULL default 0,
+					invoice_no mediumint(20) NOT NULL default 0,
+					ocr_number bigint(9) NOT NULL default 0,
+					synced tinyint(1) DEFAULT FALSE NOT NULL default 0,
+					UNIQUE KEY id (id)";
 
 			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 			dbDelta( $sql );
@@ -327,25 +326,23 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");*/
 		
 			$table_name = "wcb_customers";
-			$sql = "CREATE TABLE ".$table_name."( 
+			$sql[] = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
-					customer_number VARCHAR(50) NULL,
-					email VARCHAR(100) NOT NULL,
-					UNIQUE KEY id (id),
-					UNIQUE (email)
-			);";
+					customer_number VARCHAR(50) NULL default 0,
+					email VARCHAR(100) NOT NULL default 0,
+					UNIQUE KEY id (id) default 0,
+					UNIQUE (email))";
 			
 			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 			dbDelta( $sql );
 		
 			$table_name = "wcb_products";
-			$sql = "CREATE TABLE ".$table_name."( 
+			$sql[] = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
-					product_id mediumint(9) NULL,
-					product_sku VARCHAR(250) NOT NULL,
+					product_id mediumint(9) NULL default 0,
+					product_sku VARCHAR(250) NOT NULL default 0,
 					UNIQUE KEY id (id),
-					UNIQUE (product_sku)
-			);";
+					UNIQUE (product_sku))";
 			
 			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 			dbDelta( $sql );
