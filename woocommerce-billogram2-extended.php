@@ -366,7 +366,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$wcb_products = 'wcb_products';
 			$wpdb->query ("DROP TABLE ".$wcb_orders.";");
 			$wpdb->query ("DROP TABLE ".$wcb_customers.";");	
-			$wpdb->query ("DROP TABLE ".$wcb_products.";");				
+			$wpdb->query ("DROP TABLE ".$wcb_products.";");	
+			delete_option('billogram-tour');	
+			delete_option('billogram_version');
+			delete_option('woocommerce_billogram_general_settings');	
+			delete_option('local_key_billogram_plugin');
+			delete_option('woocommerce_billogram_order_settings');		
 			return true;
 		}
 		
@@ -376,7 +381,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		*/
 		function billogram_update(){
 			$billogram_version = get_option('billogram_version');
-			if(isset($billogram_version) && $billogram_version && $billogram_version != '1.3'){
+			if($billogram_version != '1.3'){
 				billogram_install();
 			}
 			update_option('billogram_version', '1.3');
