@@ -310,7 +310,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		function billogram_install(){
 			global $wpdb;
 			$table_name = "wcb_orders";
-			$sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( 
+			$sql = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
 					order_id mediumint(9) NOT NULL,
 					invoice_no mediumint(20) NOT NULL,
@@ -327,7 +327,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");*/
 		
 			$table_name = "wcb_customers";
-			$sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( 
+			$sql = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
 					customer_number VARCHAR(50) NULL,
 					email VARCHAR(100) NOT NULL,
@@ -339,7 +339,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			dbDelta( $sql );
 		
 			$table_name = "wcb_products";
-			$sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( 
+			$sql = "CREATE TABLE ".$table_name."( 
 					id mediumint(9) NOT NULL AUTO_INCREMENT,
 					product_id mediumint(9) NULL,
 					product_sku VARCHAR(250) NOT NULL,
