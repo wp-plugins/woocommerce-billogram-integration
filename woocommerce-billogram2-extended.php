@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.2
+ * Version: 1.3
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -144,6 +144,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$message .= '<tr><td align="right">Aktivera PRODUKT synkning: </td><td align="left">'.$options['activate-prices'].'</td></tr>';
 				$message .= '<tr><td align="right" colspan="1"><strong>Orderinställningar</strong></td></tr>';
 				$message .= '<tr><td align="right">Administrationsavgift: </td><td align="left">'.$order_options['admin-fee'].'</td></tr>';
+				$message .= '<tr><td align="right">Invoice Due days: </td><td align="left">'.$order_options['due-days'].'</td></tr>';
 			}
 			
 			$message .= '</table></html></body>';
@@ -204,6 +205,40 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		
 		add_action( 'admin_notices', 'license_key_invalid' );
 		//License key invalid warning message ends.
+		
+		//Code for handlin the billogram callbacks
+		function billogram_callback() {
+			include_once("class-billogram2-api.php");
+			$apiInterface = new WCB_API();
+			global $wpdb;
+			logthis("callback");
+			$entityBody = file_get_contents('php://input');
+			$billogram = json_decode($entityBody);
+			$ocr_number = $billogram->billogram->ocr_number;
+			//logthis("billogram");
+			//logthis($billogram);
+			if($billogram->event->type == 'BillogramSent'){
+				logthis($billogram->billogram->id);
+				$invoice = $apiInterface->get_invoice($billogram->billogram->id);
+				//logthis("invoice:");
+				//logthis($invoice);
+				$orderID = $invoice->info->order_no;
+				$wpdb->query("UPDATE wcb_orders SET invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
+				//logthis("orderID");
+				//logthis($orderID);
+				
+				return http_response_code(200);
+			}
+			
+			if($billogram->event->type == 'BillogramEnded'){
+				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
+				$order = new WC_Order($result[0]->order_id);
+				$order->update_status('Completed');
+				return http_response_code(200);
+			}
+			die(); // this is required to return a proper result
+		}
+		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
 
 
 		//Section for wordpress pointers
@@ -264,6 +299,103 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		//Section for wordpress pointers ends.
 
 
+		//Section for Plugin installation and activation
+		/**
+		 * Creates tables for WooCommerce Billogram
+		 *
+		 * @access public
+		 * @param void
+		 * @return bool
+		 */
+		function billogram_install(){
+			global $wpdb;
+			$table_name = "wcb_orders";
+			$sql[] = "CREATE TABLE ".$table_name."( 
+					id mediumint(9) NOT NULL AUTO_INCREMENT,
+					order_id mediumint(9) NOT NULL default 0,
+					invoice_no mediumint(20) NOT NULL default 0,
+					ocr_number bigint(9) NOT NULL default 0,
+					synced tinyint(1) DEFAULT FALSE NOT NULL default 0,
+					UNIQUE KEY id (id)";
+
+			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+			dbDelta( $sql );
+			
+			/*$wpdb->query ("ALTER TABLE ".$table_name." 
+						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
+						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");*/
+		
+			$table_name = "wcb_customers";
+			$sql[] = "CREATE TABLE ".$table_name."( 
+					id mediumint(9) NOT NULL AUTO_INCREMENT,
+					customer_number VARCHAR(50) NULL default 0,
+					email VARCHAR(100) NOT NULL default 0,
+					UNIQUE KEY id (id) default 0,
+					UNIQUE (email))";
+			
+			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+			dbDelta( $sql );
+		
+			$table_name = "wcb_products";
+			$sql[] = "CREATE TABLE ".$table_name."( 
+					id mediumint(9) NOT NULL AUTO_INCREMENT,
+					product_id mediumint(9) NULL default 0,
+					product_sku VARCHAR(250) NOT NULL default 0,
+					UNIQUE KEY id (id),
+					UNIQUE (product_sku))";
+			
+			require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+			dbDelta( $sql );
+			
+			add_option('billogram-tour', true);
+			
+			return true;
+		}
+		
+		/**
+		 * Drops tables for WooCommerce Billogram
+		 *
+		 * @access public
+		 * @param void
+		 * @return bool
+		 */
+		function billogram_uninstall(){
+			global $wpdb;
+			$wcb_orders = 'wcb_orders';
+			$wcb_customers = 'wcb_customers';
+			$wcb_products = 'wcb_products';
+			$wpdb->query ("DROP TABLE ".$wcb_orders.";");
+			$wpdb->query ("DROP TABLE ".$wcb_customers.";");	
+			$wpdb->query ("DROP TABLE ".$wcb_products.";");	
+			delete_option('billogram-tour');	
+			delete_option('billogram_version');
+			delete_option('woocommerce_billogram_general_settings');	
+			delete_option('local_key_billogram_plugin');
+			delete_option('woocommerce_billogram_order_settings');		
+			return true;
+		}
+		
+		/**
+		 *
+		 *Functon for plugin update
+		*/
+		function billogram_update(){
+			$billogram_version = get_option('billogram_version');
+			if($billogram_version != '1.3'){
+				$wpdb->query ("ALTER TABLE ".$table_name." 
+						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
+						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
+			}
+			update_option('billogram_version', '1.3');
+		}
+		
+		add_action( 'plugins_loaded', 'billogram_update' );
+		
+		// install necessary tables
+		register_activation_hook( __FILE__, 'billogram_install');
+		register_uninstall_hook( __FILE__, 'billogram_uninstall');
+		//Section for plugin installation and activation ends
+
         /**
          * Localisation
          **/
@@ -302,10 +434,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 if(!AUTOMATED_TESTING)
                     add_action( 'save_post', array(&$this, 'send_product_to_billogram'), 10, 1 );
-
-                // install necessary tables
-                register_activation_hook( __FILE__, array(&$this, 'install'));
-                register_deactivation_hook( __FILE__, array(&$this, 'uninstall'));
             }
 
             /***********************************************************************************************************
@@ -379,6 +507,26 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 }
                 ?>
                 <input <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> type="text" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" value="<?php echo $val; ?>" />
+                <span><i><?php echo $args['desc']; ?></i></span>
+            <?php
+            }
+			
+			
+			/**
+             * Generates html for date field for given settings params
+             *
+             * @access public
+             * @param void
+             * @return void
+             */
+            function field_option_date($args) {
+                $options = get_option($args['tab_key']);
+                $val = '';
+                if(isset($options[$args['key']] )){
+                    $val = esc_attr( $options[$args['key']] );
+                }
+                ?>
+                <input <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> type="date" name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]" value="<?php echo $val; ?>" />
                 <span><i><?php echo $args['desc']; ?></i></span>
             <?php
             }
@@ -597,6 +745,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 register_setting( $this->order_settings_key, $this->order_settings_key );
                 add_settings_section( 'section_order', 'Orderinställningar', array( &$this, 'section_order_desc' ), $this->order_settings_key );
                 add_settings_field( 'woocommerce-billogram-admin-fee', 'Administrationsavgift', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'id' => 'admin-fee', 'tab_key' => $this->order_settings_key, 'key' => 'admin-fee', 'desc' => '<br>Här anges fakturaavgiften/administrationsavgiften för Billogram <br>Lämna fältet tomt om avgift redan är konfigurerat i Billogram kontot under: Mitt konto  --> Inställningar --> Fakturainställningar --> Faktura avgift') );
+				
+				//add_settings_field( 'woocommerce-billogram-due-date', 'Invoice Due date', array( &$this, 'field_option_date'), $this->order_settings_key, 'section_order', array ( 'id' => 'due-date', 'tab_key' => $this->order_settings_key, 'key' => 'due-date', 'desc' => '<br>Om inte inställd, då standard kommer att vara 30 dagar efter fakturadatum (eller beroende på grund dagar)') );
+				
+				add_settings_field( 'woocommerce-billogram-due-days', 'Invoice Due days', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'id' => 'due-days', 'tab_key' => $this->order_settings_key, 'key' => 'due-days', 'desc' => '<br>Om inte inställd, kommer standard vara 30 dagar (eller beroende på förfallodagen)') );
                 /*add_settings_field( 'woocommerce-billogram-payment-options', 'Betalningsvillkor för order', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'payment-options', 'desc' => 'Här anges Billogram-koden för betalningsalternativ för ordern. Koder finns under INSTÄLLNINGAR->BOKFÖRING->BETALNINGSALTERNATIV i Billogram.') );*/
             }
 
@@ -815,6 +967,26 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 							}
 						});
 						
+						jQuery("#due-date").keyup(function(){
+							if(!jQuery.isNumeric(jQuery(this).val()) && jQuery(this).val() != ''){
+								jQuery(this).next().children("i").html("Ogiltigt format");
+								jQuery(this).next().addClass("error");
+							}else{
+								jQuery(this).next().removeClass("error");
+								jQuery(this).next().children("i").html("<br>Om inte inställd, då standard kommer att vara 30 dagar efter fakturadatum (eller beroende på grund dagar)");
+							}
+						});
+						
+						jQuery("#due-days").keyup(function(){
+							if(!jQuery.isNumeric(jQuery(this).val()) && jQuery(this).val() != ''){
+								jQuery(this).next().children("i").html("Ogiltigt format");
+								jQuery(this).next().addClass("error");
+							}else{
+								jQuery(this).next().removeClass("error");
+								jQuery(this).next().children("i").html("<br>Om inte inställd, kommer standard vara 30 dagar (eller beroende på förfallodagen)");
+							}
+						});
+						
 						jQuery("#billogramOrderinstallningar").submit(function(e){
 							if(!jQuery.isNumeric(jQuery("#admin-fee").val()) && jQuery("#admin-fee").val() != ''){
 								e.preventDefault();
@@ -996,69 +1168,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         </form>
                     </div>
                 <?php }
-            }
-
-            /***********************************************************************************************************
-             * DATABASE FUNCTIONS
-             ***********************************************************************************************************/
-
-            /**
-             * Creates tables for WooCommerce Billogram
-             *
-             * @access public
-             * @param void
-             * @return bool
-             */
-            public function install(){
-                global $wpdb;
-                $table_name = "wcb_orders";
-                $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
-                        order_id mediumint(9) NOT NULL,
-                        synced tinyint(1) DEFAULT FALSE NOT NULL,
-                        UNIQUE KEY id (id)
-                );";
-
-                require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-                dbDelta( $sql );
-
-                $table_name = "wcb_customers";
-                $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
-                        customer_number VARCHAR(50) NULL,
-                        email VARCHAR(100) NOT NULL,
-                        UNIQUE KEY id (id),
-                        UNIQUE (email)
-                );";
-                dbDelta( $sql );
-
-                $table_name = "wcb_products";
-                $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
-                        product_id mediumint(9) NULL,
-                        product_sku VARCHAR(250) NOT NULL,
-                        UNIQUE KEY id (id),
-                        UNIQUE (product_sku)
-                );";
-                dbDelta( $sql );
-				
-				add_option('billogram-tour', true);
-				
-                return true;
-            }
-
-            /**
-             * Drops tables for WooCommerce Billogram
-             *
-             * @access public
-             * @param void
-             * @return bool
-             */
-            public function uninstall(){
-                global $wpdb;
-                $table_name = "wcf_orders";
-                $sql = "DROP TABLE ".$table_name.";";
-
-                require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-                dbDelta( $sql );				
-                return true;
             }
 
             /***********************************************************************************************************
@@ -1481,7 +1590,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     $customerId = $databaseInterface->create_customer($order->billing_email);
                     //send Contact XML
                     $contactResponseCode = $apiInterface->create_customer_request($contactXml);
-					//logthis("contactResponseCode:".$contactResponseCode);
+					logthis("contactResponseCode:".$contactResponseCode);
                     $customerNumber = $contactResponseCode->customer_no;
                     $databaseInterface->update_customer($customerId, $customerNumber);
 
