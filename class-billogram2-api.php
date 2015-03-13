@@ -1,5 +1,5 @@
 <?php
-error_reporting(0);
+error_reporting(1);
 /* Include the Billogram API library */
 use Billogram\Api as BillogramAPI;
 use Billogram\Api\Exceptions\ObjectNotFoundError;
@@ -394,6 +394,17 @@ class WCB_API{
         logthis("GET INVENTORY REQUEST");
         return $this->make_get_request($this->build_url("articles"));
     }
+	
+	/**
+     * Creates a HttpRequest for fetching invoice data using ID
+	 *
+     * @access public
+     * @return bool
+     */
+    public function get_invoice($billogramID){
+        logthis("GET INVOICE DATA");
+        return $this->make_get_invoice($billogramID);
+    }
 
     /**
      * Creates a HttpRequest and appends the given XML to the request and sends it to Billogram
@@ -472,6 +483,35 @@ class WCB_API{
             $this->post_error($customersArray['Message']);
         }
         return $customersArray;
+    }
+	
+	/**
+     * Makes GET request to fetch billogram
+     *
+     * @access private
+     * @param mixed $url
+     * @return string
+     */
+    private function make_get_invoice($billogramID){
+
+        if(!$this->localkeydata){
+            return false;
+        }
+
+        $apiUsername = $this->api_key;
+        $apiPassword = $this->authorization_code;
+        $identifier = 'Bilogram API Customer';
+        $apiBaseUrl = $this->api_url;
+        $api = new BillogramAPI($apiUsername, $apiPassword, $identifier, $apiBaseUrl);
+        $billogram = $api->billogram->get($billogramID);
+        
+
+        //Send error to plugapi
+        if (array_key_exists("Error",$billogram)){
+            logthis("BILLOGRAM ERROR");
+            logthis($customersArray['Message']);
+        }
+        return $billogram;
     }
 
     /**

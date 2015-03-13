@@ -106,7 +106,7 @@ class WCB_Database_Interface{
      */
     public function create_unsynced_order($orderId){
         global $wpdb;
-        $wpdb->query("INSERT INTO wcb_orders VALUES (NULL, ".$orderId.", 0)");
+        $wpdb->query("INSERT INTO wcb_orders VALUES (NULL, ".$orderId.", 0, 0, 0)");
         return true;
     }
 
