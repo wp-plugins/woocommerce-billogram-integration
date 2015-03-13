@@ -380,6 +380,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		 *Functon for plugin update
 		*/
 		function billogram_update(){
+			global $wpdb;
+			$table_name = "wcb_orders";
 			$billogram_version = get_option('billogram_version');
 			if($billogram_version != '1.3'){
 				$wpdb->query ("ALTER TABLE ".$table_name." 
