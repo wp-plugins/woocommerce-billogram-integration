@@ -339,6 +339,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
+				update_option('billogram_version', '1.3');
+				
 				add_option('billogram-tour', true);
 		}
 		
