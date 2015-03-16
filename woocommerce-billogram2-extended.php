@@ -144,7 +144,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$message .= '<tr><td align="right">Aktivera PRODUKT synkning: </td><td align="left">'.$options['activate-prices'].'</td></tr>';
 				$message .= '<tr><td align="right" colspan="1"><strong>Orderinställningar</strong></td></tr>';
 				$message .= '<tr><td align="right">Administrationsavgift: </td><td align="left">'.$order_options['admin-fee'].'</td></tr>';
-				$message .= '<tr><td align="right">Invoice Due days: </td><td align="left">'.$order_options['due-days'].'</td></tr>';
+				$message .= '<tr><td align="right">Antal dagar till fakturans förfallodatum days: </td><td align="left">'.$order_options['due-days'].'</td></tr>';
 			}
 			
 			$message .= '</table></html></body>';
@@ -742,7 +742,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				
 				//add_settings_field( 'woocommerce-billogram-due-date', 'Invoice Due date', array( &$this, 'field_option_date'), $this->order_settings_key, 'section_order', array ( 'id' => 'due-date', 'tab_key' => $this->order_settings_key, 'key' => 'due-date', 'desc' => '<br>Om inte inställd, då standard kommer att vara 30 dagar efter fakturadatum (eller beroende på grund dagar)') );
 				
-				add_settings_field( 'woocommerce-billogram-due-days', 'Invoice Due days', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'id' => 'due-days', 'tab_key' => $this->order_settings_key, 'key' => 'due-days', 'desc' => '<br>Om inte inställd, kommer standard vara 30 dagar (eller beroende på förfallodagen)') );
+				add_settings_field( 'woocommerce-billogram-due-days', 'Antal dagar till fakturans förfallodatum', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'id' => 'due-days', 'tab_key' => $this->order_settings_key, 'key' => 'due-days', 'desc' => '<br>Om detta ej ställs in så är standard 30 dagar') );
                 /*add_settings_field( 'woocommerce-billogram-payment-options', 'Betalningsvillkor för order', array( &$this, 'field_option_text'), $this->order_settings_key, 'section_order', array ( 'tab_key' => $this->order_settings_key, 'key' => 'payment-options', 'desc' => 'Här anges Billogram-koden för betalningsalternativ för ordern. Koder finns under INSTÄLLNINGAR->BOKFÖRING->BETALNINGSALTERNATIV i Billogram.') );*/
             }
 
