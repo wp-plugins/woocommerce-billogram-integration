@@ -20,7 +20,7 @@ class WCB_Product_XML_Document extends WCB_XML_Document{
         $productNode = array();
         $sku = $product->get_sku();
         $tax = $product->get_price_including_tax() - $product->get_price_excluding_tax();
-        $taxper = $tax*100/$product->get_price_excluding_tax();
+        $taxper = ceil($tax*100/$product->get_price_excluding_tax());
         if($sku){
             $productNode['item_no'] = $sku;
         }
@@ -47,7 +47,7 @@ class WCB_Product_XML_Document extends WCB_XML_Document{
         $productNode = array();
         
         $tax = $product->get_price_including_tax() - $product->get_price_excluding_tax();
-        $taxper = $tax*100/$product->get_price_excluding_tax();
+        $taxper = ceil($tax*100/$product->get_price_excluding_tax());
         $productNode['title'] = $product->get_title();
         $productNode['description'] = $product->get_title();
         $productNode['price'] = $product->get_price_including_tax();
