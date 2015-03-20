@@ -75,13 +75,19 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
             $invoicerow = array();
             $invoicerow['title'] = $item['name'];
             
-            $invoicerow['price'] = $product->get_regular_price();
+			//price
+            if($product->is_on_sale()){
+				$discount = $product->get_regular_price() - $product->get_sale_price();
+           		$invoicerow['price'] = $product->get_price_excluding_tax() ? round(($product->get_price_excluding_tax()+$discount), 2) : $product->get_regular_price();
+			}else{
+				$invoicerow['price'] = $product->get_price_excluding_tax() ? round($product->get_price_excluding_tax(), 2) : $product->get_regular_price();
+			}
             
             //$invoicerow['unit'] = 'st';
             //$invoicerow['item_no'] = $product->get_sku();
             $invoicerow['description'] = $description;
             $tax = $product->get_price_including_tax() - $product->get_price_excluding_tax();
-            $taxper = $tax*100/$product->get_price_excluding_tax();
+            $taxper = floor($tax*100/$product->get_price_excluding_tax());
             $invoicerow['vat'] = $taxper;
             $invoicerow['count'] = $item['qty'];
             

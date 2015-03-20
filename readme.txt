@@ -7,8 +7,8 @@ Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
 Tested up to:      4.1.1
-Stable tag:        1.3
-Version:           1.3
+Stable tag:        1.4
+Version:           1.4
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -77,6 +77,9 @@ Read the FAQ or business hours mail support except weekends and holidays.
 http://woobill.com/category/faq/
 
 == Changelog ==
+
+= 1.4 =
+* Bug fixes for handling VAT.
 
 = 1.3 =
 * Now the plugin support Invoice Due days.
