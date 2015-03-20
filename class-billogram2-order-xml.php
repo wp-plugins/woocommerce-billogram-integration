@@ -87,7 +87,7 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
             //$invoicerow['item_no'] = $product->get_sku();
             $invoicerow['description'] = $description;
             $tax = $product->get_price_including_tax() - $product->get_price_excluding_tax();
-            $taxper = floor($tax*100/$product->get_price_excluding_tax());
+            $taxper = round($tax*100/$product->get_price_excluding_tax());
             $invoicerow['vat'] = $taxper;
             $invoicerow['count'] = $item['qty'];
             
