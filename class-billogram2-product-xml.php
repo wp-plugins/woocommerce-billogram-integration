@@ -25,7 +25,7 @@ class WCB_Product_XML_Document extends WCB_XML_Document{
             $productNode['item_no'] = $sku;
         }
         $productNode['title'] = (strlen($product->get_title()) > 40) ? substr($product->get_title(),0,36).'...' : $product->get_title();
-        $productDesc = get_post($product->id)->post_content;
+        $productDesc = strip_tags(get_post($product->id)->post_content);
         $productNode['description'] = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
         $productNode['price'] = $product->get_price_excluding_tax() ? round($product->get_price_excluding_tax(), 2) : $product->get_regular_price();
         $productNode['vat'] = $taxper;
@@ -50,7 +50,7 @@ class WCB_Product_XML_Document extends WCB_XML_Document{
         $tax = $product->get_price_including_tax() - $product->get_price_excluding_tax();
         $taxper = round($tax*100/$product->get_price_excluding_tax());
         $productNode['title'] = (strlen($product->get_title()) > 40) ? substr($product->get_title(),0,36).'...' : $product->get_title();
-		$productDesc = get_post($product->id)->post_content;
+		$productDesc = strip_tags(get_post($product->id)->post_content);
         $productNode['description'] = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
         $productNode['price'] = $product->get_price_excluding_tax() ? round($product->get_price_excluding_tax(), 2) : $product->get_regular_price();
         $productNode['vat'] = $taxper;
