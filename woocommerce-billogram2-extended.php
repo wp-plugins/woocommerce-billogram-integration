@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.4
+ * Version: 1.5
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -339,7 +339,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.3');
+				update_option('billogram_version', '1.5');
 				
 				add_option('billogram-tour', true);
 		}
@@ -375,12 +375,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			global $wpdb;
 			$table_name = "wcb_orders";
 			$billogram_version = get_option('billogram_version');
-			if($billogram_version != '1.3'){
+			if($billogram_version != '1.5' || $billogram_version != '1.4' || $billogram_version != '1.3'){
 				$wpdb->query ("ALTER TABLE ".$table_name." 
 						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
 			}
-			update_option('billogram_version', '1.3');
+			update_option('billogram_version', '1.5');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
@@ -1278,6 +1278,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     //create Order XML
                     $orderDoc = new WCB_Order_XML_Document();
                     $orderXml = $orderDoc->create($order, $customerNumber);
+					
+					logthis("orderxml:");
+					logthis($orderXml);
                     
                     //send Order XML
                     $orderResponse = $apiInterface->create_order_request($orderXml);
