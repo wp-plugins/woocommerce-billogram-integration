@@ -59,21 +59,24 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
             //if variable product there might be a different SKU
             if(empty($item['variation_id'])){
                  $productId = $item['product_id'];
-                 $description = $item['name'];
+                 //$description = $item['name'];
             }
             else{
                  $productId = $item['variation_id'];
                  $_product  = apply_filters( 'woocommerce_order_item_product', $arr->get_product_from_item( $item ), $item );
                  $item_meta = new WC_Order_Item_Meta( $item['item_meta'], $_product );
-                 $description = $item['name'].' - '.$item_meta->display($flat = true, $return = true);
+                 //$description = $item['name'].' - '.$item_meta->display($flat = true, $return = true);
             }
+			
+			$productDesc = get_post($productId)->post_content;
+			$description = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
 
             $product = $pf->get_product($productId);
             /*print_r($product);
             print_r($item);
             exit;*/
             $invoicerow = array();
-            $invoicerow['title'] = $item['name'];
+            $invoicerow['title'] = (strlen($item['name']) > 40) ? substr($item['name'],0,36).'...' : $item['name'];
             
 			//price
             if($product->is_on_sale()){
