@@ -68,7 +68,7 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
                  //$description = $item['name'].' - '.$item_meta->display($flat = true, $return = true);
             }
 			
-			$productDesc = get_post($productId)->post_content;
+			$productDesc = strip_tags(get_post($productId)->post_content);
 			$description = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
 
             $product = $pf->get_product($productId);
