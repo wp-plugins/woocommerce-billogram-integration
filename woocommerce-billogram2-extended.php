@@ -375,7 +375,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			global $wpdb;
 			$table_name = "wcb_orders";
 			$billogram_version = get_option('billogram_version');
-			if($billogram_version != '' && intval($billogram_version) < 1.3 ){
+			if($billogram_version != '' && floatval($billogram_version) < 1.3 ){
 				$wpdb->query ("ALTER TABLE ".$table_name." 
 						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
