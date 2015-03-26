@@ -219,7 +219,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$ocr_number = $billogram->billogram->ocr_number;
 			$orderID = $invoice->info->order_no;
 			if($billogram->event->type == 'BillogramSent'){
-				$wpdb->query("UPDATE wcb_orders SET invoice_id = ".$billogram->billogram->id.", invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
+				$wpdb->query("UPDATE wcb_orders SET invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
 				return http_response_code(200);
 			}
 			
@@ -236,7 +236,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		
 		
 		
-		function update_billogram_state( $order_id ){
+		/*function update_billogram_state( $order_id ){
 			logthis('update_billogram_state');
 			include_once("class-billogram2-api.php");
 			$apiInterface = new WCB_API();
@@ -245,7 +245,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$invoice_id = $wpdb->query("SELECT invoice_id FROM wcb_orders WHERE order_id = ".$order_id);
 			logthis($invoice_id);
 			die(); // this is required to return a proper result
-		}
+		}*/
 		//add_action( 'woocommerce_order_status_completed', 'update_billogram_state' );
 		
 		//Code for handlin the billogram callbacks ends
