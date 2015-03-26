@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.5
+ * Version: 1.6
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -214,32 +214,40 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			logthis("callback");
 			$entityBody = file_get_contents('php://input');
 			$billogram = json_decode($entityBody);
+			logthis($billogram->billogram->id);
+			$invoice = $apiInterface->get_invoice($billogram->billogram->id);
 			$ocr_number = $billogram->billogram->ocr_number;
-			//logthis("billogram");
-			//logthis($billogram);
+			$orderID = $invoice->info->order_no;
 			if($billogram->event->type == 'BillogramSent'){
-				logthis($billogram->billogram->id);
-				$invoice = $apiInterface->get_invoice($billogram->billogram->id);
-				//logthis("invoice:");
-				//logthis($invoice);
-				$orderID = $invoice->info->order_no;
-				$wpdb->query("UPDATE wcb_orders SET invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
-				//logthis("orderID");
-				//logthis($orderID);
-				
+				$wpdb->query("UPDATE wcb_orders SET invoice_id = ".$billogram->billogram->id.", invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
 				return http_response_code(200);
 			}
 			
 			if($billogram->event->type == 'BillogramEnded'){
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
-				$order->update_status('Completed');
+				$order->update_status('completed', 'Billogram Invoice payment completed. OCR Reference: '.$ocr_number );
 				return http_response_code(200);
 			}
 			die(); // this is required to return a proper result
 		}
 		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
-
+		
+		
+		
+		function update_billogram_state( $order_id ){
+			logthis('update_billogram_state');
+			include_once("class-billogram2-api.php");
+			$apiInterface = new WCB_API();
+			global $wpdb;
+			logthis("billogram state update");
+			$invoice_id = $wpdb->query("SELECT invoice_id FROM wcb_orders WHERE order_id = ".$order_id);
+			logthis($invoice_id);
+			die(); // this is required to return a proper result
+		}
+		//add_action( 'woocommerce_order_status_completed', 'update_billogram_state' );
+		
+		//Code for handlin the billogram callbacks ends
 
 		//Section for wordpress pointers
 		
@@ -311,10 +319,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			global $wpdb;
                 $table_name = "wcb_orders";
                 $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
-                        order_id mediumint(9) NOT NULL,
-						invoice_no mediumint(20) NOT NULL,
-						ocr_number bigint(9) NOT NULL,
-                        synced tinyint(1) DEFAULT FALSE NOT NULL,
+                        order_id MEDIUMINT(9) NOT NULL,
+						invoice_no MEDIUMINT(20) NOT NULL,
+						ocr_number BIGINT(9) NOT NULL,
+                        synced TINYINT(1) DEFAULT FALSE NOT NULL,
                         UNIQUE KEY id (id)
                 );";
 
@@ -332,14 +340,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 $table_name = "wcb_products";
                 $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
-                        product_id mediumint(9) NULL,
+                        product_id MEDIUMINT(9) NULL,
                         product_sku VARCHAR(250) NOT NULL,
                         UNIQUE KEY id (id),
                         UNIQUE (product_sku)
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.5');
+				update_option('billogram_version', '1.6');
 				
 				add_option('billogram-tour', true);
 		}
@@ -380,7 +388,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
 			}
-			update_option('billogram_version', '1.5');
+			update_option('billogram_version', '1.6');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
