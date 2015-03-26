@@ -224,9 +224,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			}
 			
 			if($billogram->event->type == 'BillogramEnded'){
+				$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
-				$order->update_status('completed', 'Billogram Invoice payment completed. OCR Reference: '.$ocr_number );
+				$order->update_status('completed');
 				return http_response_code(200);
 			}
 			die(); // this is required to return a proper result
