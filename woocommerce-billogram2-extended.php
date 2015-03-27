@@ -226,7 +226,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			if($billogram->event->type == 'BillogramEnded'){
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
-				$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+				$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 				$order->payment_complete();
 				$order->update_status('completed');
 				return http_response_code(200);
@@ -235,7 +236,11 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		}
 		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
 		
-		
+		/*function mysite_woocommerce_payment_complete( $order_id ) {
+    			logthis( "Payment has been received for order" );
+		}
+
+		add_action( 'woocommerce_payment_complete','mysite_woocommerce_payment_complete' );*/
 		
 		/*function update_billogram_state( $order_id ){
 			logthis('update_billogram_state');
