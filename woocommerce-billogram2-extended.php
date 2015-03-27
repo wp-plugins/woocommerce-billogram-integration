@@ -227,14 +227,15 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
 				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
-				$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 				$order->payment_complete();
+				$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 				$order->update_status('completed');
 				return http_response_code(200);
 			}
 			die(); // this is required to return a proper result
 		}
 		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
+		
 		
 		/*function mysite_woocommerce_payment_complete( $order_id ) {
     			logthis( "Payment has been received for order" );
@@ -1225,7 +1226,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                     //fetch Order
 					$database = new WCB_Database_Interface();
                     $order = new WC_Order($orderId);
-					logthis("Payment method: ".$order->payment_method);
+					//logthis("Payment method: ".$order->payment_method);
 					if($order->payment_method != 'billogram-invoice'){
 						if($options['activate-allsync'] != "on"){
 							$unsyncedOrders = $database->read_unsynced_orders();
