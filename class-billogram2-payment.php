@@ -37,7 +37,7 @@ function init_billogram_payment() {
 			add_action( 'woocommerce_thankyou_billogram-invoice', array( $this, 'thankyou_page_billogram' ) );
 	
 			// Customer Emails
-			add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions_billogram' ), 10, 3 );
+			add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions_billogram'), 10, 3 );
 		}
 		
 		/**
@@ -80,8 +80,9 @@ function init_billogram_payment() {
 		 * Output for the order received page.
 		 */
 		public function thankyou_page_billogram() {
-			if ( $this->instructions )
+			if ( $this->instructions ){
 				echo wpautop( wptexturize( $this->instructions ) );
+			}
 		}
 		
 		/**
@@ -109,9 +110,10 @@ function init_billogram_payment() {
 			$order = wc_get_order( $order_id );
 	
 			// Mark as on-hold (we're awaiting the cheque)
-			//$order->update_status( 'on-hold', __( 'Awaiting Billogram Invoice payment', 'woocommerce' ) );
-			$order->update_status('pending', __( 'Awaiting Billogram Invoice payment', 'woocommerce' ) );
+			$order->update_status( 'on-hold' );
+			//$order->update_status('pending', __( 'Awaiting Billogram Invoice payment', 'woocommerce' ) );
 			$order->add_order_note( 'Pending Payment: Awaiting Billogram Invoice payment' );
+			
 			// Reduce stock levels
 			//$order->reduce_order_stock();
 	
