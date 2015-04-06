@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.6
+ * Version: 1.7
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -355,7 +355,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.6');
+				update_option('billogram_version', '1.7');
 				
 				add_option('billogram-tour', true);
 		}
@@ -396,7 +396,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
 			}
-			update_option('billogram_version', '1.6');
+			update_option('billogram_version', '1.7');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
