@@ -1503,7 +1503,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             $productXml = $productDoc->create($product);
 
                             $productResponseCode = $apiInterface->create_product_request($productXml);
-							print_r($productResponseCode);
+							//print_r($productResponseCode);
                             $billogramId = $productResponseCode->item_no;
                             //set sku;
                             if($productResponseCode->item_no){
