@@ -125,12 +125,12 @@ class WCB_API{
         //  -- Configuration Values --
         // -----------------------------------
         // Enter the url to your WHMCS installation here
-        //$whmcsurl = 'http://176.10.250.47/whmcs/';
-        $whmcsurl = 'http://whmcs.onlineforce.net/';
+        $whmcsurl = 'http://176.10.250.47/whmcs/';
+        //$whmcsurl = 'http://whmcs.onlineforce.net/';
         // Must match what is specified in the MD5 Hash Verification field
         // of the licensing product that will be used with this check.
-        $licensing_secret_key = 'ak4762';
-        //$licensing_secret_key = 'itservice';
+        //$licensing_secret_key = 'ak4762';
+        $licensing_secret_key = 'itservice';
         // The number of days to wait between performing remote license checks
         $localkeydays = 15;
         // The number of days to allow failover for after local key expiry

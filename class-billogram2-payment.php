@@ -20,7 +20,7 @@ function init_billogram_payment() {
 			$this->id = 'billogram-invoice';
 			$this->icon	= '';
 			$this->has_fields = false;
-			$this->method_title = "Billogram Invoice";
+			$this->method_title = "Faktura";
 			$this->method_description = "Receive an invoice from Billogram in no time! An administrative fee of 15SEK will be charged.";
 			
 			// Load the settings.

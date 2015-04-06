@@ -78,6 +78,10 @@ http://woobill.com/category/faq/
 
 == Changelog ==
 
+= 1.7 =
+* Coupouns and Shipping order lines added to invoice
+* Payment gateway name changed from "Billogram Invoice" to "Faktura"
+
 = 1.6 =
 * Order status change to completed bug fixed.
 

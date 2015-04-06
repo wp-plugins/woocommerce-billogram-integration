@@ -102,6 +102,34 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
             /*$index += 1;*/
             $invoicerows[] = $invoicerow;
         }
+		if ($arr->get_total_shipping() > 0 ) {
+			$invoicerowShipping = array();
+			$invoicerowShipping['title'] = 'Shipping and Handling: '.$arr->get_shipping_method() ;
+			$invoicerowShipping['price'] = $arr->get_total_shipping();
+			$tax = $arr->get_shipping_tax();
+            $taxper = round($tax*100/$arr->get_total_shipping());
+			//echo $taxper; die();
+			$invoicerowShipping['vat'] = $taxper;
+			$invoicerowShipping['count'] = 1;
+			//$invoicerowShipping['unit'] = 'unit';
+			$invoicerows[] = $invoicerowShipping;
+		}
+		if (count( WC()->cart->applied_coupons ) > 0 ) {
+			$invoicerowDiscount = array();
+			foreach (WC()->cart->applied_coupons as $code ) {
+				$invoicerowDiscount['title'] = 'Coupon: '.$code;
+				$coupounAmount = WC()->cart->coupon_discount_amounts[ $code ];
+				$coupounTaxAmount = WC()->cart->coupon_discount_tax_amounts[ $code ];
+				$invoicerowDiscount['price'] = -$coupounAmount;
+				$tax = $coupounTaxAmount;
+            	$taxper = round($tax*100/$coupounAmount);
+            	$invoicerowDiscount['vat'] = $taxper;
+				$invoicerowDiscount['count'] = 1;
+				//$invoicerow['unit'] = 'unit';
+				$invoicerows[] = $invoicerowDiscount;
+			}
+		}
+		
         $order['items'] = $invoicerows;
         $order['callbacks']['sign_key'] = $signKey;
         $order['callbacks']['url'] = $siteurl;
