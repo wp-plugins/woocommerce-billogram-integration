@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.7
+ * Version: 1.8
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -227,9 +227,22 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
 				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+				$order_post = get_post( $result[0]->order_id );
+				$post_date = $order_post->post_date;
+				$post_date_gmt = $order_post->post_date_gmt;
+				
 				$order->payment_complete();
+				
+				$this_order = array(
+					'ID' => $result[0]->order_id,
+					'post_date' => $post_date,
+					'post_date_gmt' => $post_date_gmt
+				);
+				wp_update_post( $this_order );
+
 				$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 				$order->update_status('completed');
+				
 				return http_response_code(200);
 			}
 			die(); // this is required to return a proper result
@@ -355,7 +368,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.7');
+				update_option('billogram_version', '1.8');
 				
 				add_option('billogram-tour', true);
 		}
@@ -396,7 +409,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
 						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
 			}
-			update_option('billogram_version', '1.7');
+			update_option('billogram_version', '1.8');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );

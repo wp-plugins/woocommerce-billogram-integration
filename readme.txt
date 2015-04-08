@@ -7,8 +7,8 @@ Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
 Tested up to:      4.1.1
-Stable tag:        1.7
-Version:           1.7
+Stable tag:        1.8
+Version:           1.8
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -77,6 +77,9 @@ Read the FAQ or business hours mail support except weekends and holidays.
 http://woobill.com/category/faq/
 
 == Changelog ==
+
+= 1.8 =
+* Bug fixe (order date changed by payment_complete hook is fixed).
 
 = 1.7 =
 * Coupons and Shipping order lines added to invoice
