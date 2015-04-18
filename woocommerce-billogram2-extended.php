@@ -134,7 +134,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$options = get_option('woocommerce_billogram_general_settings');
 				$order_options = get_option('woocommerce_billogram_order_settings');
 				$message .= '<tr><td align="right" colspan="1"><strong>Allmänna inställningar</strong></td></tr>';
-				$message .= '<tr><td align="right">License Nyckel: </td><td align="left">'.$options['license-key'].'</td></tr>';
+				$message .= '<tr><td align="right">licens-nyckel: </td><td align="left">'.$options['license-key'].'</td></tr>';
 				$message .= '<tr><td align="right">Billogram API-användar ID: </td><td align="left">'.$options['api-key'].'</td></tr>';
 				$message .= '<tr><td align="right">Billogram Lösenord: </td><td align="left">'.$options['authorization_code'].'</td></tr>';
 				$message .= '<tr><td align="right">Billogram läge: </td><td align="left">'.$options['billogram-mode'].'</td></tr>';
@@ -197,7 +197,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			if(!isset($options['license-key']) || $options['license-key'] == '' || $key_status!='Active'){
 			?>
                 <div class="error">
-                    <p>WooCommerce Billogram Integration: License Key Invalid! <button type="button button-primary" class="button button-primary" title="" style="margin:5px" onclick="window.open('http://whmcs.onlineforce.net/cart.php?a=add&pid=54&billingcycle=annually','_blank');">Hämta license-Nyckel</button></p>
+                    <p>WooCommerce Billogram Integration: License Key Invalid! <button type="button button-primary" class="button button-primary" title="" style="margin:5px" onclick="window.open('http://whmcs.onlineforce.net/cart.php?a=add&pid=54&billingcycle=annually','_blank');">Hämta licens-nyckel</button></p>
                 </div>
 			<?php
 			}
@@ -667,7 +667,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 echo '<div class="wrap"><h2>WooCommerce Billogram Integration</h2><div id="icon-edit" class="icon32"></div></div>';
                 $key_status = $this->is_license_key_valid();
                 if(!isset($options['license-key']) || $options['license-key'] == '' || $key_status!='Active'){
-                    echo "<button type=\"button button-primary\" class=\"button button-primary\" title=\"\" style=\"margin:5px\" onclick=\"window.open('http://whmcs.onlineforce.net/cart.php?a=add&pid=54&billingcycle=annually','_blank');\">Hämta license-Nyckel</button> <div class='key_error'>License Key ".$key_status."</div>";
+                    echo "<button type=\"button button-primary\" class=\"button button-primary\" title=\"\" style=\"margin:5px\" onclick=\"window.open('http://whmcs.onlineforce.net/cart.php?a=add&pid=54&billingcycle=annually','_blank');\">Hämta licens-nyckel</button> <div class='key_error'>License Key ".$key_status."</div>";
 
                 }
 
@@ -694,7 +694,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 register_setting( $this->general_settings_key, $this->general_settings_key );
                 add_settings_section( 'section_general', 'Allmänna inställningar', array( &$this, 'section_general_desc' ), $this->general_settings_key );
-                add_settings_field( 'woocommerce-billogram-license-key', 'License Nyckel', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'id' => 'license-key', 'tab_key' => $this->general_settings_key, 'key' => 'license-key', 'desc' => 'Här anges License-nyckeln du har erhållit från oss via mail.') );
+                add_settings_field( 'woocommerce-billogram-license-key', 'licens-nyckel', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'id' => 'license-key', 'tab_key' => $this->general_settings_key, 'key' => 'license-key', 'desc' => 'Här anges License-nyckeln du har erhållit från oss via mail.') );
                 add_settings_field( 'woocommerce-billogram-api-key', 'Billogram API-användar ID', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'api-key', 'desc' => 'Här anges din API-användar ID från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
                 add_settings_field( 'woocommerce-billogram-authorization-code', 'Billogram Lösenord', array( &$this, 'field_option_text' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'authorization_code', 'desc' => 'Här anges din API kod från Billogram. <a target="_blank" href="http://vimeo.com/62060237#t=0m50s">Videoinstruktion</a>') );
                 add_settings_field( 'woocommerce-billogram-billogram-mode', 'Billogram läge', array( &$this, 'field_mode_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'billogram-mode', 'tab_key' => $this->general_settings_key, 'key' => 'billogram-mode', 'desc' => 'Välj LIVE. SANDBOX läge används endast av utvecklare'));
