@@ -1079,7 +1079,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         		<?php echo '<img src="' . plugins_url( 'img/banner-772x250.png', __FILE__ ) . '" > '; ?>
                         	</li>
                             <li class="col-twothird">
-                                <iframe src="//player.vimeo.com/video/62060237" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+                                <iframe src="https://player.vimeo.com/video/125486646" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
                             </li>
                             <?php if(!isset($options['license-key']) || $options['license-key'] == ''){ ?>
                             <li class="col-onethird">
