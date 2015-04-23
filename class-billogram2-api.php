@@ -332,6 +332,18 @@ class WCB_API{
         logthis("CREATE INVOICE REQUEST");
         return $this->make_put_request($this->build_url("billogram/invoice"),$documentNumber);
     }
+	
+	/**
+     * Creates a HttpRequest Credit of an Invoice
+     *
+     * @access public
+     * @param mixed $invoice_id
+     * @return bool
+     */
+    public function create_credit_invoice_request($invoice_id, $amount){
+        logthis("CREDIT INVOICE REQUEST");
+        return $this->make_credit_invoice($invoice_id, $amount);
+    }
     
     /**
      * Creates the HttpRequest creation of a contact/customer and appends the given XML to the request and sends it to Billogram
@@ -509,9 +521,37 @@ class WCB_API{
         //Send error to plugapi
         if (array_key_exists("Error",$billogram)){
             logthis("BILLOGRAM ERROR");
-            logthis($customersArray['Message']);
         }
         return $billogram;
+    }
+	
+	/**
+     * Makes GET request to fetch billogram
+     *
+     * @access private
+     * @param mixed $url
+     * @return string
+     */
+    private function make_credit_invoice($billogramID, $amount){
+
+        if(!$this->localkeydata){
+            return false;
+        }
+
+        $apiUsername = $this->api_key;
+        $apiPassword = $this->authorization_code;
+        $identifier = 'Bilogram API Credit';
+        $apiBaseUrl = $this->api_url;
+        $api = new BillogramAPI($apiUsername, $apiPassword, $identifier, $apiBaseUrl);
+		$billogramObject = $api->billogram->get($billogramID);
+        $billogramObject->creditAmount($amount);
+        
+
+        //Send error to plugapi
+        if (array_key_exists("Error",$billogram)){
+            logthis("BILLOGRAM ERROR");
+        }
+        return $billogramObject;
     }
 
     /**
@@ -616,7 +656,7 @@ class WCB_API{
             $array_data = $api->$url[0]->get($url[1]);
             $array_data->update($xml);
         }
-        logthis(print_r($array_data, true));
+        //logthis(print_r($array_data, true));
 
         //Send error to plugapi
         if (array_key_exists("Error",$array_data)){

@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.8
+ * Version: 1.9
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -219,31 +219,43 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$ocr_number = $billogram->billogram->ocr_number;
 			$orderID = $invoice->info->order_no;
 			if($billogram->event->type == 'BillogramSent'){
-				$wpdb->query("UPDATE wcb_orders SET invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
+				$wpdb->query("UPDATE wcb_orders SET invoice_id = '".$billogram->billogram->id."', invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
 				return http_response_code(200);
 			}
 			
 			if($billogram->event->type == 'BillogramEnded'){
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
-				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
-				$order_post = get_post( $result[0]->order_id );
-				$post_date = $order_post->post_date;
-				$post_date_gmt = $order_post->post_date_gmt;
-				
-				$order->payment_complete();
-				
-				$this_order = array(
-					'ID' => $result[0]->order_id,
-					'post_date' => $post_date,
-					'post_date_gmt' => $post_date_gmt
-				);
-				wp_update_post( $this_order );
-
-				$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
-				$order->update_status('completed');
-				
-				return http_response_code(200);
+				if($order->get_status() == 'refunded'){
+					$order->payment_complete($ocr_number);
+				}else{
+					//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+					$order_post = get_post( $result[0]->order_id );
+					$post_date = $order_post->post_date;
+					$post_date_gmt = $order_post->post_date_gmt;
+					
+					$order->payment_complete($ocr_number);
+					
+					$this_order = array(
+						'ID' => $result[0]->order_id,
+						'post_date' => $post_date,
+						'post_date_gmt' => $post_date_gmt
+					);
+					wp_update_post( $this_order );
+	
+					$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+					$order->update_status('completed');
+					
+					logthis('billogramended:');
+					logthis($billogram);
+					
+					return http_response_code(200);
+				}
+			}
+			
+			if($billogram->event->type == 'Credit'){
+				logthis('billogracredit:');
+				logthis($billogram);
 			}
 			die(); // this is required to return a proper result
 		}
@@ -341,6 +353,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 $table_name = "wcb_orders";
                 $sql = "CREATE TABLE IF NOT EXISTS ".$table_name."( id mediumint(9) NOT NULL AUTO_INCREMENT,
                         order_id MEDIUMINT(9) NOT NULL,
+						invoice_id VARCHAR( 20 ) NOT NULL,
 						invoice_no MEDIUMINT(20) NOT NULL,
 						ocr_number BIGINT(9) NOT NULL,
                         synced TINYINT(1) DEFAULT FALSE NOT NULL,
@@ -368,7 +381,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.8');
+				update_option('billogram_version', '1.9');
 				
 				add_option('billogram-tour', true);
 		}
@@ -406,10 +419,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			$billogram_version = get_option('billogram_version');
 			if($billogram_version != '' && floatval($billogram_version) < 1.3 ){
 				$wpdb->query ("ALTER TABLE ".$table_name." 
-						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER  order_id, 
-						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER  invoice_no");
+						   ADD invoice_no MEDIUMINT( 20 ) NOT NULL AFTER order_id, 
+						   ADD ocr_number BIGINT( 9 ) NOT NULL AFTER invoice_no");
 			}
-			update_option('billogram_version', '1.8');
+			if(floatval($billogram_version) < 1.9 ){
+				$wpdb->query ("ALTER TABLE ".$table_name." 
+						   ADD invoice_id VARCHAR( 20 ) NOT NULL AFTER order_id");
+			}
+			update_option('billogram_version', '1.9');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );

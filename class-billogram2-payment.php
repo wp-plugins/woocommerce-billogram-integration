@@ -23,6 +23,11 @@ function init_billogram_payment() {
 			$this->method_title = "Faktura";
 			$this->method_description = "Receive an invoice from Billogram in no time! An administrative fee of 15SEK will be charged.";
 			
+			//Features Supported
+			$this->supports = array(
+			  'refunds'
+			);
+			
 			// Load the settings.
 			$this->init_form_fields();
 			$this->init_settings();
@@ -56,7 +61,7 @@ function init_billogram_payment() {
 					'title'       => __( 'Title', 'woocommerce' ),
 					'type'        => 'text',
 					'description' => __( 'This controls the title which the user sees during checkout.', 'woocommerce' ),
-					'default'     => __( 'Billogram Invoice', 'woocommerce' ),
+					'default'     => __( 'Faktura', 'woocommerce' ),
 					'desc_tip'    => true,
 				),
 				'description' => array(
@@ -125,6 +130,31 @@ function init_billogram_payment() {
 				'result' 	=> 'success',
 				'redirect'	=> $this->get_return_url( $order )
 			);
+		}
+		
+		/**
+		 * Process the refund and return the result
+		 *
+		 * @param int $order_id
+		 * @return array
+		 */		
+		public function process_refund( $order_id, $amount = null, $reason = '' ) {
+			global $wpdb;
+			//include_once("class-billogram2-api.php");
+			//Init API
+			$apiInterface = new WCB_API();
+			
+			logthis('------refund order_id:'.$order_id.' amount:'.$amount.'-----');
+			$invoice = $wpdb->get_row("SELECT * FROM wcb_orders WHERE order_id = ".$order_id, ARRAY_A);
+			$invoice_id = $invoice['invoice_id'];
+			
+			if($invoice_id){
+				$apiInterface->create_credit_invoice_request($invoice_id, round($amount));
+				return true;
+			}else{
+				return false;
+			}
+			
 		}
 	}
 }
