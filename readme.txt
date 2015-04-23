@@ -79,7 +79,7 @@ http://woobill.com/category/faq/
 == Changelog ==
 
 = 1.9 =
-* Woobill plugin now handles the WooCommerce refund features. If a refund had been completed for the entire order, the order status will be automatically changed to refunded and a credit invoice for the refund amoun will be send to the customer. If a partial refund was awarded, the status will not change.
+* Woobill plugin now handles the WooCommerce refund feature. If a refund had been completed for the entire order, the order status will be automatically changed to refunded and a credit invoice for the refund amount will be send to the customer. If a partial refund was awarded, the status will not change.
 
 = 1.8 =
 * Bug fixe (order date changed by payment_complete hook is fixed).
