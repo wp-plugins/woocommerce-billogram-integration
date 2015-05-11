@@ -105,7 +105,7 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 		if ($arr->get_total_shipping() > 0 ) {
 			$invoicerowShipping = array();
 			$invoicerowShipping['title'] = 'Shipping and Handling: '.$arr->get_shipping_method() ;
-			$invoicerowShipping['price'] = $arr->get_total_shipping();
+			$invoicerowShipping['price'] = round($arr->get_total_shipping(), 2);
 			$tax = $arr->get_shipping_tax();
             $taxper = round($tax*100/$arr->get_total_shipping());
 			//echo $taxper; die();
@@ -118,8 +118,8 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 			$invoicerowDiscount = array();
 			foreach (WC()->cart->applied_coupons as $code ) {
 				$invoicerowDiscount['title'] = 'Coupon: '.$code;
-				$coupounAmount = WC()->cart->coupon_discount_amounts[ $code ];
-				$coupounTaxAmount = WC()->cart->coupon_discount_tax_amounts[ $code ];
+				$coupounAmount =  round(WC()->cart->coupon_discount_amounts[ $code ], 2);
+				$coupounTaxAmount =WC()->cart->coupon_discount_tax_amounts[ $code ];
 				$invoicerowDiscount['price'] = -$coupounAmount;
 				$tax = $coupounTaxAmount;
             	$taxper = round($tax*100/$coupounAmount);
