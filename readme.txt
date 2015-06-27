@@ -6,9 +6,9 @@ Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invo
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
-Tested up to:      4.1.2
-Stable tag:        1.9
-Version:           1.9
+Tested up to:      4.2.2
+Stable tag:        1.9.1
+Version:           1.9.1
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -77,6 +77,9 @@ Read the FAQ or business hours mail support except weekends and holidays.
 http://woobill.com/category/faq/
 
 == Changelog ==
+
+= 1.9.1 =
+* Option for stock reduction management added. Now you can select if the stock reduction should be done after the payment complete or after the checkout.
 
 = 1.9 =
 * Woobill plugin now handles the WooCommerce refund feature. If a refund had been completed for the entire order, the order status will be automatically changed to refunded and a credit invoice for the refund amount will be send to the customer. If a partial refund was awarded, the status will not change.

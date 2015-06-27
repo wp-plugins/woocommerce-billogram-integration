@@ -113,15 +113,18 @@ function init_billogram_payment() {
 		public function process_payment( $order_id ) {
 	
 			$order = wc_get_order( $order_id );
+			
+			$options = get_option('woocommerce_billogram_general_settings');
 	
 			// Mark as on-hold (we're awaiting the cheque)
 			$order->update_status( 'on-hold' );
 			//$order->update_status('pending', __( 'Awaiting Billogram Invoice payment', 'woocommerce' ) );
 			$order->add_order_note( 'Pending Payment: Awaiting Billogram Invoice payment' );
 			
-			// Reduce stock levels
-			//$order->reduce_order_stock();
-	
+			if($options['stock-reduction'] == 'on'){
+				$order->reduce_order_stock(); // Payment is complete so reduce stock levels
+			}
+			
 			// Remove cart
 			WC()->cart->empty_cart();
 	

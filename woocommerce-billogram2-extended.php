@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.9
+ * Version: 1.9.1
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -227,14 +227,16 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 				$order = new WC_Order($result[0]->order_id);
 				if($order->get_status() == 'refunded'){
-					$order->payment_complete($ocr_number);
+					//$order->payment_complete($ocr_number);
+					payment_complete($order, $ocr_number);
 				}else{
 					//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 					$order_post = get_post( $result[0]->order_id );
 					$post_date = $order_post->post_date;
 					$post_date_gmt = $order_post->post_date_gmt;
 					
-					$order->payment_complete($ocr_number);
+					//$order->payment_complete($ocr_number);
+					payment_complete($order, $ocr_number);
 					
 					$this_order = array(
 						'ID' => $result[0]->order_id,
@@ -260,6 +262,78 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			die(); // this is required to return a proper result
 		}
 		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
+		
+		
+		// Overriding woocommerce native function payment_complete for bypassing order item stock reduction
+		function payment_complete( $order, $transaction_id = '' ) {
+			
+			$options = get_option('woocommerce_billogram_general_settings');
+
+			do_action( 'woocommerce_pre_payment_complete', $order->id );
+	
+			if ( null !== WC()->session ) {
+				WC()->session->set( 'order_awaiting_payment', false );
+			}
+	
+			$valid_order_statuses = apply_filters( 'woocommerce_valid_order_statuses_for_payment_complete', array( 'on-hold', 'pending', 'failed', 'cancelled' ), $order );
+	
+			if ( $order->id && $order->has_status( $valid_order_statuses ) ) {
+	
+				$order_needs_processing = true;
+	
+				if ( sizeof( $order->get_items() ) > 0 ) {
+	
+					foreach ( $order->get_items() as $item ) {
+	
+						if ( $item['product_id'] > 0 ) {
+	
+							$_product = $order->get_product_from_item( $item );
+	
+								if ( false !== $_product && ! apply_filters( 'woocommerce_order_item_needs_processing', ! ( $_product->is_downloadable() && $_product->is_virtual() ), $_product, $order->id ) ) {
+								$order_needs_processing = false;
+								continue;
+							}
+						}
+	
+						$order_needs_processing = true;
+						break;
+					}
+				}
+	
+				$new_order_status = $order_needs_processing ? 'processing' : 'completed';
+	
+				$new_order_status = apply_filters( 'woocommerce_payment_complete_order_status', $new_order_status, $order->id );
+	
+				$order->update_status( $new_order_status );
+	
+				add_post_meta( $order->id, '_paid_date', current_time('mysql'), true );
+	
+				if ( ! empty( $transaction_id ) ) {
+					add_post_meta( $order->id, '_transaction_id', $transaction_id, true );
+				}
+	
+				$this_order = array(
+					'ID' => $order->id,
+					'post_date' => current_time( 'mysql', 0 ),
+					'post_date_gmt' => current_time( 'mysql', 1 )
+				);
+				wp_update_post( $this_order );
+	
+				if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', true, $order->id ) ) {
+					
+					if($options['stock-reduction'] != 'on'){
+						$order->reduce_order_stock(); // Payment is complete so reduce stock levels
+					}
+				}
+	
+				do_action( 'woocommerce_payment_complete', $order->id );
+	
+			} else {
+	
+				do_action( 'woocommerce_payment_complete_order_status_' . $order->get_status(), $order->id );
+	
+			}
+		}
 		
 		
 		/*function mysite_woocommerce_payment_complete( $order_id ) {
@@ -381,7 +455,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.9');
+				update_option('billogram_version', '1.91');
 				
 				add_option('billogram-tour', true);
 		}
@@ -426,7 +500,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$wpdb->query ("ALTER TABLE ".$table_name." 
 						   ADD invoice_id VARCHAR( 20 ) NOT NULL AFTER order_id");
 			}
-			update_option('billogram_version', '1.9');
+			update_option('billogram_version', '1.91');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
@@ -718,7 +792,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				add_settings_field( 'woocommerce-billogram-activate-orders', 'Aktivera ORDER synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'id' => 'activate-order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-orders', 'desc' => 'Skal vara vald för att ordrar skal synkas till Billogram') );
                 add_settings_field( 'woocommerce-billogram-activate-invoices', 'ORDER synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => 'Välj här vad som skal hända i Billogram när en order i woocommerce synkas ditt'));
 				add_settings_field( 'woocommerce-billogram-activate-allsync', 'Aktivera alla beställningar synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-allsync', 'desc' => 'Synka alla ordrar från WooCommerce till Billogram oavsett om kund väljer annat betalningsalternativ (t.ex; Paypa, Dibs, Stripe, Payson etc.) <br><i style="margin-left:25px; color: #F00;">Om du är osäker vad du ska välja här rekommenderar vi att du inte markerar detta alternativ.</i>') );
-                add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivera PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );              
+                add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivera PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );
+				add_settings_field( 'woocommerce-billogram-stock-reduction', 'Beställningsvara lagerminskning efter kassan', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'stock-reduction', 'desc' => 'Standard lagerminskning sker mot betalning komplett.') );              
             }
 
             /**
@@ -1291,7 +1366,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 							}
 						}
 					}
-                    
                 }
             }
 
