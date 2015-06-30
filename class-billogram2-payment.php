@@ -121,7 +121,7 @@ function init_billogram_payment() {
 			//$order->update_status('pending', __( 'Awaiting Billogram Invoice payment', 'woocommerce' ) );
 			$order->add_order_note( 'Pending Payment: Awaiting Billogram Invoice payment' );
 			
-			if($options['stock-reduction'] == 'on'){
+			if($options['stock-reduction'] == 'checkout'){
 				$order->reduce_order_stock(); // Payment is complete so reduce stock levels
 			}
 			

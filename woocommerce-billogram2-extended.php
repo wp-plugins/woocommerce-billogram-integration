@@ -321,7 +321,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	
 				if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', true, $order->id ) ) {
 					
-					if($options['stock-reduction'] != 'on'){
+					if($options['stock-reduction'] == 'invoice'){
 						$order->reduce_order_stock(); // Payment is complete so reduce stock levels
 					}
 				}
@@ -674,6 +674,37 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 <span id="sandbox-mode"><i><?php echo $args['desc']; ?></i></span>
             <?php
             }
+			
+			
+			
+			/**
+             * Generates html for dropdown for given settings of Stock reduction handle
+             *
+             * @access public
+             * @param void
+             * @return void
+             */
+            function field_stock_dropdown($args) {
+                $options = get_option($args['tab_key']);
+                $str1 = '';
+                $str2 = '';
+                if(isset($options[$args['key']])){
+                    if($options[$args['key']] == 'invoice'){
+                        $str1 = 'selected';
+                    }
+					elseif($options[$args['key']] == 'checkout'){
+						$str2 = 'selected';
+					}
+                }
+
+                ?>
+                <select <?php echo isset($args['id'])? 'id="'.$args['id'].'"': ''; ?> name="<?php echo $args['tab_key']; ?>[<?php echo $args['key']; ?>]">
+                    <option value='invoice' <?php echo $str1; ?>>När faktura är betald</option>
+                    <option value='checkout' <?php echo $str2; ?>>Vid inkommen beställning</option>
+                </select>
+                <span><i><?php echo $args['desc']; ?></i></span>
+            <?php
+            }
             
             /**
              * Generates html for dropdown for given settings params
@@ -793,7 +824,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 add_settings_field( 'woocommerce-billogram-activate-invoices', 'ORDER synkning method', array( &$this, 'field_option_dropdown'), $this->general_settings_key, 'section_general', array ( 'id' => 'order-sync', 'tab_key' => $this->general_settings_key, 'key' => 'activate-invoices', 'desc' => 'Välj här vad som skal hända i Billogram när en order i woocommerce synkas ditt'));
 				add_settings_field( 'woocommerce-billogram-activate-allsync', 'Aktivera alla beställningar synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-allsync', 'desc' => 'Synka alla ordrar från WooCommerce till Billogram oavsett om kund väljer annat betalningsalternativ (t.ex; Paypa, Dibs, Stripe, Payson etc.) <br><i style="margin-left:25px; color: #F00;">Om du är osäker vad du ska välja här rekommenderar vi att du inte markerar detta alternativ.</i>') );
                 add_settings_field( 'woocommerce-billogram-activate-prices', 'Aktivera PRODUKT synkning', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'activate-prices', 'desc' => '') );
-				add_settings_field( 'woocommerce-billogram-stock-reduction', 'Beställningsvara lagerminskning efter kassan', array( &$this, 'field_option_checkbox' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'stock-reduction', 'desc' => 'Standard lagerminskning sker mot betalning komplett.') );              
+				add_settings_field( 'woocommerce-billogram-stock-reduction', 'Minska lagersaldo', array( &$this, 'field_stock_dropdown' ), $this->general_settings_key, 'section_general', array ( 'tab_key' => $this->general_settings_key, 'key' => 'stock-reduction', 'desc' => 'Välj här om lagersaldo i WooCommerce skal minskas när Billogram registrerar fakturan som betald eller redan vid beställningen.') );              
             }
 
             /**
