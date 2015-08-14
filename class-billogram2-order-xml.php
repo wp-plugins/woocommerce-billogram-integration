@@ -99,13 +99,20 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 					//$total_initial_payment_with_tax = WC_Subscriptions_Order::get_total_initial_payment( $arr );
 					//$total_initial_payment = $total_initial_payment_with_tax/(1+($taxper	/100));
 					//$invoicerow['price'] = round($total_initial_payment, 2);
-					if(WC_Subscriptions_Order::get_subscription_trial_length( $arr, $productId ) == 0)
+					/*if(WC_Subscriptions_Order::get_subscription_trial_length( $arr, $productId ) == 0)
 						$price_per_period = WC_Subscriptions_Product::get_price( $productId );
 					else
 						$price_per_period = 0;
 					$line_item_count = $arr->get_item_count('line_item');
+					*/
 					$sign_up_fee_without_tax = get_post_meta($productId, '_subscription_sign_up_fee', true);
-					$invoicerow['price'] = round($price_per_period + $sign_up_fee_without_tax, 2);
+					if ( get_option('woocommerce_prices_include_tax') == 'yes' ){
+						//$price_per_period = $price_per_period - (($price_per_period*$taxper)/100);
+						$sign_up_fee_without_tax = $sign_up_fee_without_tax/(1+($taxper/100));
+						$invoicerow['price'] = round($invoicerow['price'] + $sign_up_fee_without_tax, 2);
+					}else{
+						$invoicerow['price'] = round($invoicerow['price'] + $sign_up_fee_without_tax, 2);
+					}
 				}
 			}			
 			
@@ -180,7 +187,8 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 		//logthis("siteurl: ". $siteurl);
        
 	   
-	   	$order['invoice_date'] = date('Y-m-d', strtotime(WC_Subscriptions_Order::get_next_payment_date( $arr, $product_id, $from_date = '' )));
+	   	$order['invoice_date'] = date('Y-m-d');
+		//$order['invoice_date'] = WC_Subscriptions_Order::get_next_payment_date( $arr, $product_id, $from_date = '' );
 	   
         //$order['invoice_date'] = substr($arr->order_date, 0, 10);
         //$order['due_date'] = date("Y-m-d", strtotime($arr->order_date ." +15 day") );
@@ -245,7 +253,8 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
 				
 				//$tax_rates  = WC_Tax::get_base_tax_rates( $product->tax_class );
 				//$tax      	= WC_Tax::calc_tax( $product->get_price_excluding_tax() * $item['qty'], $tax_rates, true );
-				$tax = $amount_to_charge - $product->get_price_excluding_tax();
+				//$tax = $amount_to_charge - $product->get_price_excluding_tax();
+				$tax = $product->get_price_including_tax() - $product->get_price_excluding_tax() ;
 				$taxper = round($tax*100/$product->get_price_excluding_tax());
 				$invoicerow['vat'] = $taxper;
 				$invoicerow['count'] = $item['qty'];
