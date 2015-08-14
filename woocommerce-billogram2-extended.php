@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 1.9.1
+ * Version: 2.0
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -63,6 +63,22 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         }
 
         add_action( 'admin_enqueue_scripts', 'billogram_enqueue' );
+		
+		//Add action to schedules payment for subscriptions
+		add_action('scheduled_subscription_payment_billogram-invoice', 'scheduled_subscription_payment', 10, 3);
+		function scheduled_subscription_payment($amount_to_charge, $order, $product_id){
+			logthis("scheduled_subscription_payment_billogram-invoice run for order".$order->id);
+			include_once("class-billogram2-database-interface.php");
+			$fnox = new WC_Billogram_Extended();
+			$database = new WCB_Database_Interface();
+			$database->create_unsynced_order($order->id);
+			$customerNumber = $fnox->get_or_create_customer($order);
+			$orderNumber = $fnox->send_scheduled_subscription_order_to_billogram($amount_to_charge, $order, $product_id, $customerNumber);
+			if($orderNumber == 0){
+				$database->set_as_synced_subscription($order->id);
+				return true;
+			}
+		}
 		
 		
 		//Add action to handle billogram invoice payment order sync
@@ -208,29 +224,32 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		
 		//Code for handlin the billogram callbacks
 		function billogram_callback() {
+			global $wpdb;
 			include_once("class-billogram2-api.php");
 			$apiInterface = new WCB_API();
-			global $wpdb;
-			logthis("callback");
 			$entityBody = file_get_contents('php://input');
 			$billogram = json_decode($entityBody);
-			logthis($billogram->billogram->id);
 			$invoice = $apiInterface->get_invoice($billogram->billogram->id);
 			$ocr_number = $billogram->billogram->ocr_number;
 			$orderID = $invoice->info->order_no;
+			$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
 			if($billogram->event->type == 'BillogramSent'){
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
 				$wpdb->query("UPDATE wcb_orders SET invoice_id = '".$billogram->billogram->id."', invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID);
-				return http_response_code(200);
+				return header("HTTP/1.1 200 OK");
+				die(); // this is required to return a proper result
 			}
-			
-			if($billogram->event->type == 'BillogramEnded'){
-				$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
+			if($billogram->event->type == 'Payment'){
+				if(update_post_meta($result[0]->order_id, 'process_billogram_payment_on_order', $billogram->billogram->id) == false){
+					logthis('duplicate_billogram_callback');
+					return header("HTTP/1.1 200 OK");
+					die(); // this is required to return a proper result
+				}
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
 				$order = new WC_Order($result[0]->order_id);
-				if($order->get_status() == 'refunded'){
-					//$order->payment_complete($ocr_number);
-					payment_complete($order, $ocr_number);
-				}else{
-					//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
 					$order_post = get_post( $result[0]->order_id );
 					$post_date = $order_post->post_date;
 					$post_date_gmt = $order_post->post_date_gmt;
@@ -245,96 +264,182 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					);
 					wp_update_post( $this_order );
 	
-					$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
-					$order->update_status('completed');
-					
-					logthis('billogramended:');
-					logthis($billogram);
-					
-					return http_response_code(200);
-				}
+					if($order->get_status() != 'completed'){
+						$order->add_order_note( 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+						$order->update_status('completed');
+					}
+					return header("HTTP/1.1 200 OK");
+					die(); // this is required to return a proper result
 			}
-			
 			if($billogram->event->type == 'Credit'){
-				logthis('billogracredit:');
-				logthis($billogram);
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
+				$order = new WC_Order($result[0]->order_id);
+				if($order->get_status() != 'refunded'){
+					$order->update_status('refunded');
+				}
+				return header("HTTP/1.1 200 OK");
+				die(); // this is required to return a proper result
 			}
+			logthis('BillogramEvent: '.$billogram->event->type);
+			logthis($billogram->billogram->id);
 			die(); // this is required to return a proper result
 		}
 		add_action( 'wp_ajax_nopriv_billogram_callback', 'billogram_callback' );
 		
 		
-		// Overriding woocommerce native function payment_complete for bypassing order item stock reduction
-		function payment_complete( $order, $transaction_id = '' ) {
-			
-			$options = get_option('woocommerce_billogram_general_settings');
+		//Code for handlin the billogram callbacks on subscription schedule payments
+		function billogram_callback_subscription() {
+			global $wpdb;
+			include_once("class-billogram2-api.php");
+			include_once("class-billogram2-database-interface.php");
+			$apiInterface = new WCB_API();
+			$database = new WCB_Database_Interface();
+			$entityBody = file_get_contents('php://input');
+			$billogram = json_decode($entityBody);
+			$invoice = $apiInterface->get_invoice($billogram->billogram->id);
+			$ocr_number = $billogram->billogram->ocr_number;
+			$orderID = $invoice->info->order_no;
+			$result = $wpdb->get_results("SELECT order_id FROM wcb_orders WHERE ocr_number = ".$ocr_number);
+			if($billogram->event->type == 'BillogramSent'){
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
+				$wpdb->query("UPDATE wcb_orders SET invoice_id = '".$billogram->billogram->id."', invoice_no = ".$billogram->event->data->invoice_no.", ocr_number=".$ocr_number." WHERE order_id = ".$orderID." AND invoice_id = 0 AND invoice_no = 0 AND ocr_number = 0");
+				return header("HTTP/1.1 200 OK");
+				die(); // this is required to return a proper result
+			}
+			if($billogram->event->type == 'Payment'){
+				if(update_post_meta($result[0]->order_id, 'process_subscription_payments_on_order', $billogram->billogram->id) == false){
+					logthis('duplicate_billogram_callback');
+					return header("HTTP/1.1 200 OK");
+					die(); // this is required to return a proper result
+				}
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
+				$order = new WC_Order($result[0]->order_id);
+				//$order->update_status('processing', 'Billogram Invoice payment accepted. OCR Reference: '.$ocr_number );
+				$order_post = get_post( $result[0]->order_id );
+				$post_date = $order_post->post_date;
+				$post_date_gmt = $order_post->post_date_gmt;
+				
+				//$order->payment_complete($ocr_number);
+				//payment_complete($order, $ocr_number);
+				
+				$this_order = array(
+					'ID' => $result[0]->order_id,
+					'post_date' => $post_date,
+					'post_date_gmt' => $post_date_gmt
+				);
+				wp_update_post( $this_order );
 
+				$order->add_order_note( 'Billogram Invoice payment accepted on the subscription renewal. OCR Reference: '.$ocr_number );
+				$order->update_status('completed');
+				
+				logthis('process_subscription_payments_on_order');					
+				WC_Subscriptions_Manager::process_subscription_payments_on_order( $order );
+				$subscription_payment_recorded_orders = $wpdb->get_results("SELECT post_id FROM ".$wpdb->prefix."postmeta WHERE meta_key = '_original_order' AND meta_value = ".$order->id, ARRAY_A);
+				foreach ($subscription_payment_recorded_orders as $subscription_payment_recorded_order){
+					$renewal_order = new WC_Order($subscription_payment_recorded_order['post_id']);
+					/*if(!$database->is_synced_order($subscription_payment_recorded_order['post_id'])){
+						$database->create_unsynced_order($subscription_payment_recorded_order['post_id']);
+						$database->set_as_synced_subscription($subscription_payment_recorded_order['post_id']);
+					}*/
+					if($renewal_order->get_status() != 'completed'){
+						//$wpdb->query("DELETE FROM wcb_orders WHERE order_id = ".$renewal_order->id);
+						$wpdb->query("UPDATE wcb_orders SET order_id = ".$renewal_order->id." WHERE ocr_number = ".$ocr_number);
+						payment_complete($renewal_order, $ocr_number);
+						$renewal_order->add_order_note( 'Billogram Invoice payment recorded on the subscription renewal. OCR Reference: '.$ocr_number );
+						$renewal_order->update_status('completed');
+						update_post_meta( $renewal_order->id, '_transaction_id', $ocr_number );
+					}
+				}					
+				return header("HTTP/1.1 200 OK");
+				die(); // this is required to return a proper result
+			}
+			if($billogram->event->type == 'Credit'){
+				if(update_post_meta($result[0]->order_id, 'process_subscription_credit_payments_on_order', $billogram->billogram->id) == false){
+					logthis('duplicate_billogram_callback');
+					return header("HTTP/1.1 200 OK");
+					die(); // this is required to return a proper result
+				}
+				logthis('BillogramEvent: '.$billogram->event->type);
+				logthis($billogram->billogram->id);
+				$order = new WC_Order($result[0]->order_id);
+				logthis('process_subscription_credit_payments_on_order');					
+				WC_Subscriptions_Manager::process_subscription_payments_on_order( $order );
+				$subscription_payment_recorded_orders = $wpdb->get_results("SELECT post_id FROM ".$wpdb->prefix."postmeta WHERE meta_key = '_original_order' AND meta_value = ".$order->id, ARRAY_A);
+				foreach ($subscription_payment_recorded_orders as $subscription_payment_recorded_order){
+					$renewal_order = new WC_Order($subscription_payment_recorded_order['post_id']);
+					/*if(!$database->is_synced_order($subscription_payment_recorded_order['post_id'])){
+						$database->create_unsynced_order($subscription_payment_recorded_order['post_id']);
+						$database->set_as_synced_subscription($subscription_payment_recorded_order['post_id']);
+					}*/
+					if($renewal_order->get_status() != 'completed'){
+						//$wpdb->query("DELETE FROM wcb_orders WHERE order_id = ".$renewal_order->id);
+						$wpdb->query("UPDATE wcb_orders SET order_id = ".$renewal_order->id." WHERE ocr_number = ".$ocr_number);
+						payment_complete($renewal_order, $ocr_number);
+						$renewal_order->add_order_note( 'Billogram Invoice credit payment recorded on the subscription renewal. OCR Reference: '.$ocr_number );
+						$renewal_order->update_status('refunded');
+						update_post_meta( $renewal_order->id, '_transaction_id', $ocr_number );
+					}
+				}	
+				
+				return header("HTTP/1.1 200 OK");
+				die(); // this is required to return a proper result
+			}
+			logthis('BillogramEvent: '.$billogram->event->type);
+			logthis($billogram->billogram->id);
+			die(); // this is required to return a proper result
+		}
+		add_action( 'wp_ajax_nopriv_billogram_callback_subscription', 'billogram_callback_subscription' );
+		
+		
+		// Overriding woocommerce native function payment_complete for bypassing order item stock reduction
+		function payment_complete( $order, $transaction_id = '' ) {		
+			$options = get_option('woocommerce_billogram_general_settings');
 			do_action( 'woocommerce_pre_payment_complete', $order->id );
-	
 			if ( null !== WC()->session ) {
 				WC()->session->set( 'order_awaiting_payment', false );
 			}
-	
 			$valid_order_statuses = apply_filters( 'woocommerce_valid_order_statuses_for_payment_complete', array( 'on-hold', 'pending', 'failed', 'cancelled' ), $order );
-	
 			if ( $order->id && $order->has_status( $valid_order_statuses ) ) {
-	
 				$order_needs_processing = true;
-	
 				if ( sizeof( $order->get_items() ) > 0 ) {
-	
 					foreach ( $order->get_items() as $item ) {
-	
 						if ( $item['product_id'] > 0 ) {
-	
 							$_product = $order->get_product_from_item( $item );
-	
 								if ( false !== $_product && ! apply_filters( 'woocommerce_order_item_needs_processing', ! ( $_product->is_downloadable() && $_product->is_virtual() ), $_product, $order->id ) ) {
 								$order_needs_processing = false;
 								continue;
 							}
 						}
-	
 						$order_needs_processing = true;
 						break;
 					}
 				}
-	
 				$new_order_status = $order_needs_processing ? 'processing' : 'completed';
-	
 				$new_order_status = apply_filters( 'woocommerce_payment_complete_order_status', $new_order_status, $order->id );
-	
 				$order->update_status( $new_order_status );
-	
 				add_post_meta( $order->id, '_paid_date', current_time('mysql'), true );
-	
 				if ( ! empty( $transaction_id ) ) {
 					add_post_meta( $order->id, '_transaction_id', $transaction_id, true );
 				}
-	
 				$this_order = array(
 					'ID' => $order->id,
 					'post_date' => current_time( 'mysql', 0 ),
 					'post_date_gmt' => current_time( 'mysql', 1 )
 				);
 				wp_update_post( $this_order );
-	
 				if ( apply_filters( 'woocommerce_payment_complete_reduce_order_stock', true, $order->id ) ) {
-					
 					if($options['stock-reduction'] == 'invoice'){
 						$order->reduce_order_stock(); // Payment is complete so reduce stock levels
 					}
 				}
-	
 				do_action( 'woocommerce_payment_complete', $order->id );
-	
 			} else {
-	
 				do_action( 'woocommerce_payment_complete_order_status_' . $order->get_status(), $order->id );
-	
 			}
 		}
-		
 		
 		/*function mysite_woocommerce_payment_complete( $order_id ) {
     			logthis( "Payment has been received for order" );
@@ -455,7 +560,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '1.91');
+				update_option('billogram_version', '2.0');
 				
 				add_option('billogram-tour', true);
 		}
@@ -500,7 +605,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$wpdb->query ("ALTER TABLE ".$table_name." 
 						   ADD invoice_id VARCHAR( 20 ) NOT NULL AFTER order_id");
 			}
-			update_option('billogram_version', '1.91');
+			update_option('billogram_version', '2.0');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
@@ -1480,6 +1585,75 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 }
                 return 0;
             }
+			
+			/**
+			 * Sends order to Billogram API
+			 *
+			 * @access public
+			 * @param obj $order
+			 * @param $customerNumber
+			 * @return void
+			 */
+			public function send_scheduled_subscription_order_to_billogram($amount_to_charge, $order, $product_id, $customerNumber) {
+				global $wcdn;
+				$options = get_option('woocommerce_billogram_general_settings');
+				include_once("class-billogram2-order-xml.php");
+				include_once("class-billogram2-database-interface.php");
+				include_once("class-billogram2-api.php");
+			
+				//Init API
+				$apiInterface = new WCB_API();
+			
+				//create Order XML
+				$orderDoc = new WCB_Order_XML_Document();
+				$orderXml = $orderDoc->create_scheduled_subscription($amount_to_charge, $order, $product_id, $customerNumber);
+				
+				logthis("subscription orderxml:");
+				logthis($orderXml);
+				
+				//send Order XML
+				$orderResponse = $apiInterface->create_order_request($orderXml);
+			
+				logthis("OrderResponse: ".$orderResponse);
+				//Error handling
+				if(array_key_exists('Error', $orderResponse)){
+					logthis(print_r($orderResponse, true));
+					// if order exists
+					if($orderResponse['Code'] == $this->BILLOGRAM_ERROR_CODE_ORDER_EXISTS){
+						logthis("ORDER EXISTS");
+						$apiInterface->update_order_request($orderXml, $order->id);
+					}
+					// if products dont exist
+					elseif($orderResponse['Code'] == $this->BILLOGRAM_ERROR_CODE_PRODUCT_NOT_EXIST){
+						logthis("PRODUCT DOES NOT EXIST");
+			
+						foreach($order->get_items() as $item){
+							//if variable product there might be a different SKU
+							if(empty($item['variation_id'])){
+								$productId = $item['product_id'];
+							}
+							else{
+								$productId = $item['variation_id'];
+							}
+							$this->send_product_to_billogram($productId);
+						}
+						$orderResponse = $apiInterface->create_order_request($orderXml);
+					}
+					else{
+						logthis("CREATE UNSYNCED ORDER");
+						//Init DB 2000861
+						$database = new WCB_Database_Interface();
+						//Save
+						$database->create_unsynced_order($order->id);
+						return 1;
+					}
+				}
+				if(($options['activate-invoices'] == 'Skapa faktura och skicka som epost' || $options['activate-invoices'] == 'Skapa faktura och skicka som brev') && $order->payment_method == 'billogram-invoice'){
+					//Create invoice
+					$invoiceResponse = $apiInterface->create_order_invoice_request($orderResponse);
+				}
+				return 0;
+			}
 
             /**
              * Sends ALL unsynced orders to Billogram API
@@ -1724,7 +1898,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
              * @param $order
              * @return void
              */
-            private function get_or_create_customer($order){
+            public function get_or_create_customer($order){
+				include_once("class-billogram2-database-interface.php");
+				include_once("class-billogram2-api.php");
+				include_once("class-billogram2-contact-xml.php");
                 $databaseInterface = new WCB_Database_Interface();
                 //$customeremail = $this->get_orderd_user_data($order->id,'billing_email');
                 $customer = $databaseInterface->get_customer_by_email($order->billing_email);
@@ -1747,7 +1924,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                 }
                 else{
-                    
                     $customerNumber = $customer[0]->customer_number;
                     $apiInterface->update_customer_request($contactXml, $customerNumber);
                     

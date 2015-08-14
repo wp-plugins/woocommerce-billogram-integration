@@ -25,7 +25,15 @@ function init_billogram_payment() {
 			
 			//Features Supported
 			$this->supports = array(
-			  'refunds'
+				'refunds',
+				'products',
+				'subscriptions',
+				'subscription_cancellation',
+				'subscription_suspension', 
+				'subscription_reactivation',	
+				'subscription_date_changes',		  
+				/*'subscription_payment_method_change',
+				'subscription_amount_changes',*/
 			);
 			
 			// Load the settings.

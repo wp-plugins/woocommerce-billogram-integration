@@ -6,9 +6,9 @@ Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invo
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
-Tested up to:      4.2.2
-Stable tag:        1.9.1
-Version:           1.9.1
+Tested up to:      4.2.4
+Stable tag:        2.0
+Version:           2.0
 
 Completely synchronize your WooCommerce Orders, Customers and Products to your Billogram invoicing service account.
 
@@ -77,6 +77,9 @@ Read the FAQ or business hours mail support except weekends and holidays.
 http://woobill.com/category/faq/
 
 == Changelog ==
+
+= 2.0 =
+* WooCommerce Billogram Integration plugin now supports WooCommerce Subscriptions.
 
 = 1.9.1 =
 * Option for stock reduction management added. Now you can select if the stock reduction should be done after the payment complete or after the checkout.

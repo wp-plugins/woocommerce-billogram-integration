@@ -92,7 +92,7 @@ class WCB_API{
      * @return bool
      */
     public function create_api_validation_request(){
-        logthis("LISCENSE VALIDATION");
+        //logthis("LISCENSE VALIDATION");
         if(!isset($this->license_key)){
             return false;
         }
@@ -116,7 +116,7 @@ class WCB_API{
      * @return bool
      */
     public function create_license_validation_request($localkey=''){
-        logthis("LISCENSE VALIDATION");
+        //logthis("LISCENSE VALIDATION");
         if(!isset($this->license_key)){
             return false;
         }
@@ -430,9 +430,9 @@ class WCB_API{
             return false;
         }
 
-        logthis("LOGIN");
-        logthis($this->authorization_code);
-        logthis($this->client_secret);
+        //logthis("LOGIN");
+        //logthis($this->authorization_code);
+        //logthis($this->client_secret);
         $headers = array(
             'Accept: application/xml',
             'Authorization-Code: '.$this->authorization_code,
@@ -455,7 +455,7 @@ class WCB_API{
         if($this->access_token){
             update_option( 'billogram_access_token', $this->access_token, '', 'yes' );
         }
-        logthis(print_r($arrayData, true));
+        //logthis(print_r($arrayData, true));
         curl_close($ch);
         return false;
     }

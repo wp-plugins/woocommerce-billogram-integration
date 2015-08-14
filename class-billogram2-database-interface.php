@@ -55,6 +55,20 @@ class WCB_Database_Interface{
         return true;
 
     }
+	
+	/**
+     * Sets an subscription order to synced
+     *
+     * @access public
+     * @param int $orderId
+     * @return bool
+     */
+    public function set_as_synced_subscription($orderId){
+        global $wpdb;
+        $wpdb->query("UPDATE wcb_orders SET synced = 1 WHERE order_id = ".$orderId." AND invoice_id = 0 AND invoice_no = 0 AND ocr_number = 0");
+        return true;
+
+    }
 
      /**
      * Sets an Product SKU
