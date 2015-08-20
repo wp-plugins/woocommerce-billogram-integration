@@ -6,7 +6,7 @@ Tags:              WooCommerce, Order, E-Commerce, Accounting, Bookkeeping, invo
 Author URI:        www.woobill.com
 Author:            WooBill
 Requires at least: 3.8
-Tested up to:      4.2.4
+Tested up to:      4.3
 Stable tag:        2.0
 Version:           2.0
 
@@ -47,7 +47,7 @@ Features of WooCommerce Billogram Integration:
 
 == Plugin Requirement ==
 
-*	PHP version : 5.3 or higher
+*	PHP version : 5.3 or higher, tested upto 5.5
 *	WordPress   : Wordpress 3.8 or higher
 
 == Installation ==
