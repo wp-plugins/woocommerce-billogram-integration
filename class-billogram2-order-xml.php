@@ -69,6 +69,8 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
                  $productId = $item['product_id'];
 				 $invoicerow['title'] = (strlen($item['name']) > 40) ? substr($item['name'],0,36).'...' : $item['name'];
                  //$description = $item['name'];
+				 $productDesc = strip_tags(get_post($productId)->post_content);
+				 $description = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
             }
             else{
                  $productId = $item['variation_id'];
@@ -79,11 +81,10 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
                  //$item_meta = new WC_Order_Item_Meta( $item['item_meta'], $_product );
                  //$description = $item['name'].' - '.$item_meta->display($flat = true, $return = true);
 				 
-				 $invoicerow['title'] = (strlen($item['name']. ' -> '. $item_variation) > 40) ? substr($item['name']. ' ('. $item_variation . ')',0,36).'...' : $item['name']. ' ('. $item_variation.')';
+				 $invoicerow['title'] = (strlen($item['name']. ' ('. $item_variation . ')') > 40) ? substr($item['name']. ' ('. $item_variation . ')',0,36).'...' : $item['name']. ' ('. $item_variation.')';
+				 $productDesc = strip_tags(get_post($productId)->post_content);
+				 $description = (strlen('('. $item_variation. ')'. $productDesc) > 200) ? substr('('. $item_variation. ')'. $productDesc,0,196).'...' : '('. $item_variation. ')'. $productDesc;
             }
-			
-			$productDesc = strip_tags(get_post($productId)->post_content);
-			$description = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
 
 			$invoicerow['description'] = $description;
 			$product = $pf->get_product($productId);
