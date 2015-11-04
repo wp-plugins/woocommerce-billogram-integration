@@ -125,8 +125,8 @@ class WCB_API{
         //  -- Configuration Values --
         // -----------------------------------
         // Enter the url to your WHMCS installation here
+		$whmcsurl = 'http://whmcs.onlineforce.net/';
         //$whmcsurl = 'http://176.10.250.47/whmcs/';
-        $whmcsurl = 'http://whmcs.onlineforce.net/';
         // Must match what is specified in the MD5 Hash Verification field
         // of the licensing product that will be used with this check.
         $licensing_secret_key = 'ak4762';

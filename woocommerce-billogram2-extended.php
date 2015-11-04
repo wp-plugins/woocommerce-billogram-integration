@@ -4,7 +4,7 @@
  * Plugin URI: http://plugins.svn.wordpress.org/woocommerce-billogram-integration/
  * Description: A Billogram 2 API Interface. Synchronizes products, orders and more to billogram.
  * Also fetches inventory from billogram and updates WooCommerce
- * Version: 2.0
+ * Version: 2.1
  * Author: WooBill
  * Author URI: http://woobill.com
  * License: GPL2
@@ -560,7 +560,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                 );";
                 dbDelta( $sql );
 				
-				update_option('billogram_version', '2.0');
+				update_option('billogram_version', '2.1');
 				
 				add_option('billogram-tour', true);
 		}
@@ -605,7 +605,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				$wpdb->query ("ALTER TABLE ".$table_name." 
 						   ADD invoice_id VARCHAR( 20 ) NOT NULL AFTER order_id");
 			}
-			update_option('billogram_version', '2.0');
+			update_option('billogram_version', '2.1');
 		}
 		
 		add_action( 'plugins_loaded', 'billogram_update' );
@@ -1720,11 +1720,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
              */
             public function initial_products_sync() {
                 $args = array(
-                    'post_type' => 'product',
+                    'post_type' => array('product', 'product_variation'),
                     'orderby' => 'id',
                     'posts_per_page' => -1,
                 );
                 $the_query = new WP_Query( $args );
+				//logthis($the_query->get_posts());
                 foreach($the_query->get_posts() as $product){
                     $this->send_product_to_billogram($product->ID);
                 }
@@ -1751,7 +1752,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
                     $post = get_post($productId);
 
-                    if($post->post_type == 'product' && $post->post_status == 'publish'){
+                    if(($post->post_type == 'product' || $post->post_type == 'product_variation') && $post->post_status == 'publish'){
                         include_once("class-billogram2-product-xml.php");
                         include_once("class-billogram2-database-interface.php");
                         include_once("class-billogram2-api.php");
@@ -1772,11 +1773,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                         $sku = $sku_array[0]->product_sku;
                         
                         $isSynced = get_post_meta( $productId, '_is_synced_to_billogram' );
-
+						logthis($productId);
                         if (!empty($isSynced) && !empty($sku_array)) {
-
-                        	
-
                             logthis("UPDATE PRODUCT");
                             //echo $cur_sku."|".$sku."|".$cur_sku_ajax;
                             //exit;
@@ -1806,8 +1804,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
                             return $updateResponse;
                         }
                         else{
-
-
                             logthis("CREATE PRODUCT");
                             $productXml = $productDoc->create($product);
 

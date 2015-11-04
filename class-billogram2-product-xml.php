@@ -118,4 +118,53 @@ class WCB_Product_XML_Document extends WCB_XML_Document{
 
         return $this->generate($root, $price);
     }
+	
+	
+	/**
+	* Create product meta key value in well formated text, added in 2.1
+	* @access public
+	* @param mixed $order
+	* @return formated product meta key, value text.
+	*/
+	public function get_product_meta($metadata){
+		//logthis($metadata);
+		$attribute = array();
+		foreach ( $metadata as $meta_key => $meta_value ) {
+			// Skip hidden core fields
+			//logthis('item meta:');
+			//logthis($meta_value);
+			if ( in_array( $meta_key, apply_filters( 'woocommerce_hidden_order_itemmeta', array(
+				'_qty',
+				'_tax_class',
+				'_product_id',
+				'_variation_id',
+				'_line_subtotal',
+				'_line_subtotal_tax',
+				'_line_total',
+				'_line_tax',
+				'_line_tax_data',
+			) ) ) ) {
+				continue;
+			}
+	
+			// Skip serialised meta
+			if ( is_serialized( $meta_value ) ) {
+				continue;
+			}
+	
+			// Get attribute data
+			if ( taxonomy_exists( wc_sanitize_taxonomy_name( $meta_key ) ) ) {
+				$term               = get_term_by( 'slug', $meta_value[0], wc_sanitize_taxonomy_name( $meta_key ) );
+				$meta_key   = wc_attribute_label( wc_sanitize_taxonomy_name( $meta_key ) );
+				$meta_value[0] = isset( $term->name ) ? $term->name : $meta_value[0];
+			} else {
+				$meta_key   = apply_filters( 'woocommerce_attribute_label', wc_attribute_label( $meta_key, $_product ), $meta_key );
+			}
+	
+			array_push($attribute, ' '.$meta_key . ': ' . $meta_value[0]);
+		}
+		//logthis('attribute');
+		//logthis(explode(',', $attribute));
+		return implode(',', $attribute);
+	}
 }

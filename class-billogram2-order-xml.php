@@ -1,5 +1,6 @@
 <?php
 include_once("class-billogram2-xml.php");
+include_once("class-billogram2-product-xml.php");
 class WCB_Order_XML_Document extends WCB_XML_Document{
     /**
      *
@@ -55,6 +56,9 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
         $index = 0;
         foreach($arr->get_items() as $item){
             /*$key = "items" . $index;*/
+			$invoicerow = array();
+			//logthis('item:');
+			//logthis($item);
 
             //fetch product
             $pf = new WC_Product_Factory();
@@ -63,20 +67,24 @@ class WCB_Order_XML_Document extends WCB_XML_Document{
             //if variable product there might be a different SKU
             if(empty($item['variation_id'])){
                  $productId = $item['product_id'];
+				 $invoicerow['title'] = (strlen($item['name']) > 40) ? substr($item['name'],0,36).'...' : $item['name'];
                  //$description = $item['name'];
             }
             else{
                  $productId = $item['variation_id'];
-                 $_product  = apply_filters( 'woocommerce_order_item_product', $arr->get_product_from_item( $item ), $item );
-                 $item_meta = new WC_Order_Item_Meta( $item['item_meta'], $_product );
+				 $product_xml = new WCB_Product_XML_Document();
+				 //logthis($item['item_meta']);
+				 $item_variation = $product_xml->get_product_meta($item['item_meta']);
+                 //$_product  = apply_filters( 'woocommerce_order_item_product', $arr->get_product_from_item( $item ), $item );
+                 //$item_meta = new WC_Order_Item_Meta( $item['item_meta'], $_product );
                  //$description = $item['name'].' - '.$item_meta->display($flat = true, $return = true);
+				 
+				 $invoicerow['title'] = (strlen($item['name']. ' -> '. $item_variation) > 40) ? substr($item['name']. ' ('. $item_variation . ')',0,36).'...' : $item['name']. ' ('. $item_variation.')';
             }
 			
 			$productDesc = strip_tags(get_post($productId)->post_content);
 			$description = (strlen($productDesc) > 200) ? substr($productDesc,0,196).'...' : $productDesc;
-			
-			$invoicerow = array();
-			$invoicerow['title'] = (strlen($item['name']) > 40) ? substr($item['name'],0,36).'...' : $item['name'];
+
 			$invoicerow['description'] = $description;
 			$product = $pf->get_product($productId);
 			if($product->is_on_sale()){
