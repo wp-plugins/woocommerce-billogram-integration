@@ -26,9 +26,11 @@ class WCB_Contact_XML_Document extends WCB_XML_Document{
         $contact['address']['street_address'] = $arr->billing_address_1;
         $contact['address']['zipcode'] = $arr->billing_postcode;
         $contact['address']['city'] = $arr->billing_city;
+		$contact['address']['country'] = $arr->billing_country;
         $contact['delivery_address']['street_address'] = $arr->shipping_address_1;
         $contact['delivery_address']['zipcode'] = $arr->shipping_postcode;
         $contact['delivery_address']['city'] = $arr->shipping_city;
+		$contact['delivery_address']['country'] = $arr->shipping_country;
         $contact['company_type'] = 'individual';
         //$contact['PriceList'] = 'A';
         //$root = 'Customer';
@@ -46,9 +48,11 @@ class WCB_Contact_XML_Document extends WCB_XML_Document{
         $contact['address']['street_address'] = $arr->billing_address_1;
         $contact['address']['zipcode'] = $arr->billing_postcode;
         $contact['address']['city'] = $arr->billing_city;
+		$contact['address']['country'] = $arr->billing_country;
         $contact['delivery_address']['street_address'] = $arr->shipping_address_1;
         $contact['delivery_address']['zipcode'] = $arr->shipping_postcode;
         $contact['delivery_address']['city'] = $arr->shipping_city;
+		$contact['delivery_address']['country'] = $arr->shipping_country;
         $contact['company_type'] = 'individual';
         //$contact['PriceList'] = 'A';
         //$root = 'Customer';
